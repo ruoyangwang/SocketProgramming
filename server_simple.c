@@ -34,7 +34,8 @@ int main(void)
     char buf[BUFLEN];
      
     //create a UDP socket
-    if ((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+    //IPPROTO_UDP
+    if ((s=socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {
         die("socket");
     }
@@ -52,6 +53,51 @@ int main(void)
         die("bind");
     }
      
+
+
+	FILE *exein, *exeout;
+
+	exein = fopen("test.png", "rb");
+	if (exein == NULL) {
+
+	    perror("file open for reading");
+	    exit(EXIT_FAILURE);
+	}
+	exeout = fopen("test_copy.png", "wb");
+	if (exeout == NULL) {
+
+	    perror("file open for writing");
+	    exit(EXIT_FAILURE);
+	}
+
+
+	size_t n, m;
+	unsigned char buff[1024];
+	do {
+	    n = fread(buff, 1, sizeof buff, exein);
+	    if (n) m = fwrite(buff, 1, n, exeout);
+	    else   m = 0;
+	} while ((n > 0) && (n == m));
+	if (m) perror("copy");
+
+
+	if (fclose(exeout)) perror("close output file");
+	if (fclose(exein)) perror("close input file");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     //keep listening for data
     while(1)
     {
@@ -59,17 +105,19 @@ int main(void)
         fflush(stdout);
          
         //try to receive some data, this is a blocking call
-        if ((recv_len = recvfrom(s, buf, BUFLEN, 0, (struct sockaddr *) &si_other, &slen)) == -1)
+       	if (recvfrom(s, buf, BUFLEN, 0, (struct sockaddr *) &si_other, &slen) == -1)
         {
             die("recvfrom()");
         }
+         
+        puts(buf);
          
         //print details of the client/peer and the data received
         printf("Received packet from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
         printf("Data: %s\n" , buf);
          
 
-
+	/*
 	//parsing
 	struct packet P;
 	int count = 0;
@@ -136,7 +184,10 @@ int main(void)
 		}
 	}
 	count = 0;
-	
+		
+
+
+
 	P.total_frag = atoi(total_frag);
 	P.frag_no = atoi(frag_no);
 	P.size = atoi(size);
@@ -144,21 +195,19 @@ int main(void)
 
 	printf("%d,%d,%d,%s\n" , P.total_frag, P.frag_no , P.size, P.filename );
 
-
+*/
 
 
 
 
 	//start creating files
-	//FILE *fp = fopen(filename, "ab+");
-	//fprintf(fp, "Some text: %s\n", buf);
-	//fclose(fp);`
+	FILE *fp = fopen("test_copy.png", "ab");
+	fprintf(fp, "%s", buf);
+	
+	//fwrite(buf, 1, sizeof(buf), fp);
 	
 
-
-
-
-
+	fclose(fp);
 
 
 
