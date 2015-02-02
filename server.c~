@@ -16,7 +16,7 @@ unsigned int total_frag;
 unsigned int frag_no; 
 unsigned int size; 
 char* filename; 
-char filedata[1000]; 
+char filedata[1024]; 
 };
 
  
@@ -72,12 +72,12 @@ int main(void)
          
         //print details of the client/peer and the data received
         //printf("Received packet from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
-        printf("Data: %s\n" , buf);
+       // printf("Data: %s\n" , buf);
          
 
 	
 	//parsing
-	struct packet P;
+	struct packet P;/*
 	int count = 0;
 	char *total_frag = ""; 
 	char *frag_no = ""; 
@@ -142,6 +142,7 @@ int main(void)
 			
 		}
 	}
+	
 	count = 0;
 		
 
@@ -152,34 +153,43 @@ int main(void)
 	P.size = atoi(size);
 	P.filename = filename;
 
-	printf("%d,%d,%d,%s\n" , P.total_frag, P.frag_no , P.size, P.filename );
+	
 
 	//P.filedata = filedata;
 	//printf("%s\n" , P.filedata );
+	char stringinfo[1024];
+	sprintf(stringinfo, "%d:%d:%d:%s:",P.total_frag, P.frag_no , P.size, P.filename);
+	int sizeOfHeader = strlen(stringinfo)+1;
+	printf("check binary data size and head size  %d ----- %d  ",P.size, sizeOfHeader);
+	printf("%d:%d:%d:%s:\n" , P.total_frag, P.frag_no , P.size, P.filename );
+
+	*/
+
+	memcpy(P.filedata,buf, sizeof buf);
+	//printf("%s\n" , P.filedata );
 
 
-
-/*
 	//start creating files
 	FILE *fp = fopen("test_copy.png", "ab");
 	//fprintf(fp, "%s", buf);
 	
-	fwrite(buf, sizeof buf, 1, fp);
+	fwrite(P.filedata, sizeof P.filedata, 1, fp);
 	
 
 	fclose(fp);
-*/
 
 
 
 
 
 
+	/*
         //now reply the client with the same data
         if (sendto(s, buf, recv_len, 0, (struct sockaddr*) &si_other, slen) == -1)
         {
             die("sendto()");
         }
+	*/
     }
  
     close(s);

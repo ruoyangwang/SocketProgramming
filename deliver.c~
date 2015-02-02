@@ -55,12 +55,12 @@ int main(void)
 
 
 	
-	size_t n;
+	size_t n=1;
 	char *filename = "test.png";
 	FILE * fd = fopen("test.png", "rb");
 
 
-	unsigned int frag_no = 0;
+	unsigned int frag_no = 1;
 	fseek(fd, 0L, SEEK_END);
 	size_t filesize = ftell(fd);
 	unsigned int total_frag = filesize/BUFLEN;
@@ -73,21 +73,24 @@ int main(void)
 
 
 	unsigned char buff[1024];
-	do {
+	while (1) {
 	   	n = fread(buff, 1, sizeof buff, fd);
+		if(n==0)
+			break;
 		char stringinfo[1024];
 		
-		sprintf(stringinfo, "%d:%d:%d:%s:",total_frag,frag_no,sizeof (buff),filename);
+		sprintf(stringinfo, "%d:%d:%d:%s:",total_frag,frag_no,n,filename);
 		int len = strlen(stringinfo)+1+n;
 		int sizeOfHeader = strlen(stringinfo)+1;
 		char sendbuf[len];
 		memcpy(sendbuf,stringinfo, sizeOfHeader);
 		memcpy(sendbuf+sizeOfHeader, buff, n);
 
-		printf("print the string %s \n",sendbuf);
+		//printf("print size of binary data %d    %d  \n", (sendbuf+sizeOfHeader),n);
 		frag_no++;
+		
 	    	sendto(s, sendbuf, sizeof sendbuf , 0 , (struct sockaddr *) &si_other, slen);
-	} while ((n > 0));
+	} 
 	if (fclose(fd)) perror("close input file");
 	frag_no = 0;
 
