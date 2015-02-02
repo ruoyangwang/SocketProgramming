@@ -35,7 +35,7 @@ int main(void)
      
     //create a UDP socket
     //IPPROTO_UDP
-    if ((s=socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+    if ((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     {
         die("socket");
     }
@@ -59,7 +59,7 @@ int main(void)
     //keep listening for data
     while(1)
     {
-        printf("Waiting for data...");
+        
         fflush(stdout);
          
         //try to receive some data, this is a blocking call
@@ -71,18 +71,19 @@ int main(void)
         //puts(buf);
          
         //print details of the client/peer and the data received
-        printf("Received packet from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
+        //printf("Received packet from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
         //printf("Data: %s\n" , buf);
          
 
-	/*
+	
 	//parsing
 	struct packet P;
 	int count = 0;
 	char *total_frag = ""; 
 	char *frag_no = ""; 
 	char *size = ""; 
-	char *filename = ""; 
+	char *filename = "";
+	char filedata[1024] = ""; 
 
 	for (i=0;i <1024;i++)
 	{
@@ -153,11 +154,12 @@ int main(void)
 
 	printf("%d,%d,%d,%s\n" , P.total_frag, P.frag_no , P.size, P.filename );
 
-*/
+	//P.filedata = filedata;
+	//printf("%s\n" , P.filedata );
 
 
 
-
+/*
 	//start creating files
 	FILE *fp = fopen("test_copy.png", "ab");
 	//fprintf(fp, "%s", buf);
@@ -166,7 +168,7 @@ int main(void)
 	
 
 	fclose(fp);
-
+*/
 
 
 
