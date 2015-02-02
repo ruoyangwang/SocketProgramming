@@ -34,7 +34,7 @@ int main(void)
     char buf[BUFLEN];
     
     //IPPROTO_UDP
-    if ( (s=socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+    if ( (s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     {
         die("socket");
     }
@@ -54,16 +54,33 @@ int main(void)
 
 
 
-	FILE * exein = fopen("test.png", "rb");
+	FILE * fd = fopen("test.png", "rb");
 	size_t n, m;
+	fseek(fd, 0L, SEEK_END);
+	size_t filesize = ftell(fd);
+	unsigned char message[BUFLEN];
+	unsigned int total_frag = filesize/BUFLEN;
+	unsigned int frag_no = 1;
+	char *filename = "test.png";
+	
+	if(filesize%BUFLEN!=0)
+		total_frag= filesize/BUFLEN+1;
+	//--------------------------------------------------------------------------------------
+	
+    //--------------------------------------------------------------------------------------
 	unsigned char buff[1024];
 	do {
-	    n = fread(buff, 1, sizeof buff, exein);
+	    n = fread(buff, 1, sizeof buff, fd);
 	    //if (n) m = fwrite(buff, 1, n, exeout);
-	    if (n) sendto(s, buff, sizeof buff , 0 , (struct sockaddr *) &si_other, slen);
+	    char newdata[1024];
+		char totalfrag[100], curfrag[100];
+		char stringinfo[1024];
+		sprintf(stringinfo, "%d:%d:%d:%s:",total_frag,frag_no,sizeof (buff),filename);
+		//printf("print the string %s: ",stringinfo);
+	    if (n) sendto(s, stringinfo, sizeof stringinfo , 0 , (struct sockaddr *) &si_other, slen);
 	    else   m = 0;
 	} while ((n > 0));
-	if (fclose(exein)) perror("close input file");
+	if (fclose(fd)) perror("close input file");
 	
 
 
