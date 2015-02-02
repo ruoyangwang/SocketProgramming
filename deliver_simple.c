@@ -9,7 +9,7 @@
 #include<sys/socket.h>
  
 #define SERVER "127.0.0.1"
-#define BUFLEN 1024  //Max length of buffer
+#define BUFLEN 512  //Max length of buffer
 #define PORT 8000   //The port on which to send data
  
 struct packet { 
@@ -54,10 +54,10 @@ int main(void)
 
 	
 	FILE * fd = fopen("test.png", "rb");
+	fseek(fd, 0L, SEEK_END);
 	size_t filesize = ftell(fd);
-	char message[1024];
+	char message[BUFLEN];
 	unsigned int bytes_read = 0;
-	int offset = 0;
 	unsigned int total_frag = filesize/BUFLEN;
 	unsigned int frag_no = 1;
 	char *filename = "test.png";
@@ -66,9 +66,16 @@ int main(void)
 		total_frag= filesize/BUFLEN+1;
 	
 	
-	while(bytes_read = fread(&message,  sizeof(char), BUFLEN, fd)>0){
+	while(bytes_read = fread(message,  sizeof(char), BUFLEN, fd)>0){
         //send the message
-        if (sendto(s, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
+        char newdata[1024];
+        char totalfrag[100], curfrag[100];
+        char stringinfo[1024];
+        sprintf(stringinfo, "%d:%d:%d:%s:",total_frag,frag_no,sizeof (message),filename);
+        printf("print the string %s: ",stringinfo);
+        memcpy(stringinfo, message,(sizeof message)+1);
+        
+        if (sendto(s, stringinfo, strlen(stringinfo) , 0 , (struct sockaddr *) &si_other, slen)==-1)
         {
             die("sendto()");
         }
@@ -81,35 +88,12 @@ int main(void)
         {
             die("recvfrom()");
         }
+        frag_no++;
          
-        puts(buf);
+        //puts(buf);
     } 
 
 
-
-	/*for (i =0; i<3;i++){
- 	char message[BUFLEN] = "3:";  
-	char str[3];
-	snprintf(str, 3, "%d", 3-i);
-    	strcat (message,str);
-	strcat (message,":10:test.txt:010101");
-        //send the message
-        if (sendto(s, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
-        {
-            die("sendto()");
-        }
-         
-        //receive a reply and print it
-        //clear the buffer by filling null, it might have previously received data
-        memset(buf,'\0', BUFLEN);
-        //try to receive some data, this is a blocking call
-        if (recvfrom(s, buf, BUFLEN, 0, (struct sockaddr *) &si_other, &slen) == -1)
-        {
-            die("recvfrom()");
-        }
-         
-        puts(buf);
-    	}*/
  
     close(s);
     return 0;

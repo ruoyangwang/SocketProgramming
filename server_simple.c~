@@ -74,7 +74,7 @@ int main(void)
 	size_t n, m;
 	unsigned char buff[1024];
 	do {
-	    n = fread(buff, sizeof(char), BUFLEN, exein);
+	    n = fread(buff, sizeof(char), sizeof buff, exein);
 	    if (n) m = fwrite(buff, 1, n, exeout);
 	    else   m = 0;
 	} while ((n > 0) && (n == m));
