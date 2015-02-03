@@ -9,15 +9,15 @@
 #include<sys/socket.h>
 #include<sys/ioctl.h>
  
-#define BUFLEN 1000  //Max length of UDP datagram
+#define BUFLEN 4096  //Max length of UDP datagram
 #define PORT 8000   //The port on which to listen for incoming data
 
 struct packet { 
-unsigned int total_frag; 
+unsigned int total_frag;
 unsigned int frag_no; 
 unsigned int size; 
 char* filename; 
-char filedata[512]; 
+char filedata[1000]; 
 };
 
  
@@ -36,6 +36,10 @@ int main (int argc, char *argv[])
         printf( "only one arugment allowed" );
 		exit;
     	}
+
+
+	unsigned int curr_frag = 1;
+
 
 
     struct sockaddr_in si_me, si_other;
@@ -74,7 +78,7 @@ int main (int argc, char *argv[])
         {
             die("recvfrom()");
         }
-
+	
 	//parsing
 	struct packet P;
 	int count = 0;
@@ -82,9 +86,9 @@ int main (int argc, char *argv[])
 	char *frag_no = ""; 
 	char *size = ""; 
 	char *filename = "";
-	char filedata[512] = ""; 
+	char filedata[1000] = ""; 
 
-	for (i=0;i <1000;i++)
+	for (i=0;i <4096;i++)
 	{
 		if (buf[i] != ':')
 		{
@@ -157,21 +161,66 @@ int main (int argc, char *argv[])
 	int sizeOfHeader = strlen(stringinfo)+1;
 	//printf("check binary data size and head size  %d ----- %d  ",P.size, sizeOfHeader);
 	printf("%d:%d:%d:%s:\n" , P.total_frag, P.frag_no , P.size, P.filename );
-
-	
-
 	memcpy(P.filedata,buf+sizeOfHeader, P.size);
-	printf("filedata--%d Psize-----%d\n", sizeof P.filedata, P.size  );
-	char name[100]="cpy_";
-	strcat(name,P.filename);
-	FILE *fp = fopen(name, "ab");
+
+
+
+
+	if (P.frag_no == curr_frag){
+
+
+		char name[100]="cpy_";
+		strcat(name,P.filename);
+		FILE *fp = fopen(name, "ab");
 	
-	fwrite(P.filedata, sizeof P.filedata, 1, fp);
+		fwrite(P.filedata, sizeof P.filedata, 1, fp);
 	
-	fclose(fp);
+		fclose(fp);
+
+
+		curr_frag++;
+
+
+		char packetloss[1024];
+		sprintf(packetloss, "1:%d",curr_frag);
+		memcpy(buf,packetloss, sizeof packetloss);
+
+		
+		if (sendto(s, buf, sizeof buf, 0, (struct sockaddr*) si_other, slen) == -1)
+		{
+		    die("sendto()");
+		}
+		
+
+		
+	}
+	else{
+
+		char packetloss[1024];
+		sprintf(packetloss, "-1:%d",curr_frag);
+		memcpy(buf,packetloss, sizeof packetloss);
+
+		if (sendto(s, buf, recv_len, 0, (struct sockaddr*) &si_other, slen) == -1)
+		{
+		    die("sendto()");
+		}
+
+	
+
+	}
+
+	if (curr_frag == P.total_frag)
+		curr_frag =1;
+		
 
     }
  
+
+
+
+
+
+
     close(s);
     return 0;
 }
