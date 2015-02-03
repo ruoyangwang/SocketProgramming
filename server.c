@@ -34,22 +34,8 @@ int main (int argc, char *argv[])
    	{
         /* We print argv[0] assuming it is the program name */
         printf( "only one arugment allowed" );
-	exit;
+		exit;
     	}
-
-	/*
-    	int arrSize = 1000;
-	struct packet *packets = malloc( arrSize * sizeof *packets );
-
-
-	struct packet *tmp = realloc( packet, sizeof *packets * ( arrSize * 2));
-	if ( tmp )
-	{
-	  packets = tmp;
-	  arrSize *= 2;
-	}
-	*/
-
 
 
     struct sockaddr_in si_me, si_other;
@@ -77,11 +63,7 @@ int main (int argc, char *argv[])
     {
         die("bind");
     }
-     
 
-
-	
-    //keep listening for data
     while(1)
     {
         
@@ -92,11 +74,6 @@ int main (int argc, char *argv[])
         {
             die("recvfrom()");
         }
-         
-
-        //printf("Received packet from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
-       // printf("Data: %s\n" , buf);
-         
 
 	//parsing
 	struct packet P;
@@ -109,13 +86,9 @@ int main (int argc, char *argv[])
 
 	for (i=0;i <1000;i++)
 	{
-
-		
 		if (buf[i] != ':')
 		{
 			if (count == 0){
-
-
 	     			    size_t len = strlen(total_frag);
 				    char *str2 = malloc(len + 1 + 1 ); 
 				    strcpy(str2, total_frag);
@@ -170,11 +143,7 @@ int main (int argc, char *argv[])
 			
 		}
 	}
-	
 	count = 0;
-		
-
-
 
 	P.total_frag = atoi(total_frag);
 	P.frag_no = atoi(frag_no);
@@ -193,35 +162,14 @@ int main (int argc, char *argv[])
 
 	memcpy(P.filedata,buf+sizeOfHeader, P.size);
 	printf("filedata--%d Psize-----%d\n", sizeof P.filedata, P.size  );
-	//printf("%s\n", P.filedata  );
-
-
-
-
-
-
-	//start creating files
-	FILE *fp = fopen("test_copy.png", "ab");
+	char name[100]="cpy_";
+	strcat(name,P.filename);
+	FILE *fp = fopen(name, "ab");
 	
 	fwrite(P.filedata, sizeof P.filedata, 1, fp);
 	
 	fclose(fp);
-	
 
-
-
-
-
-
-
-
-	/*
-        //now reply the client with the same data
-        if (sendto(s, buf, recv_len, 0, (struct sockaddr*) &si_other, slen) == -1)
-        {
-            die("sendto()");
-        }
-	*/
     }
  
     close(s);

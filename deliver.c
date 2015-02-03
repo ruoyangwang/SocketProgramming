@@ -26,17 +26,18 @@ void die(char *s)
     perror(s);
     exit(1);
 }
- 
+
+
 int main(int argc, char **argv)
 {
-	char *SERVER = argv[1];
+ 
+	char * ip = argv[1];
 	int PORT = atoi(argv[2]);
 	int listenPortNum = atoi(argv[3]);
 	char *filename = argv[4];
-	
+	printf("%s %d %d %s \n",ip,PORT,listenPortNum,filename);
     struct sockaddr_in si_other;
     int s, i, slen=sizeof(si_other);
-
     
     //IPPROTO_UDP
     if ( (s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
@@ -48,14 +49,14 @@ int main(int argc, char **argv)
     si_other.sin_family = AF_INET;
     si_other.sin_port = htons(PORT);
      
-    if (inet_aton(SERVER, &si_other.sin_addr) == 0) 
+    if (inet_aton(ip, &si_other.sin_addr) == 0) 
     {
         fprintf(stderr, "inet_aton() failed\n");
         exit(1);
     }
 
 	size_t n=1;
-	FILE * fd = fopen("test.png", "rb");
+	FILE * fd = fopen(filename, "rb");
 
 
 	unsigned int frag_no = 1;
@@ -65,7 +66,7 @@ int main(int argc, char **argv)
 	if(filesize%BUFLEN!=0)
 		total_frag= filesize/BUFLEN+1;
 	fclose(fd);
-	fd = fopen("test.png", "rb");
+	fd = fopen(filename, "rb");
 	
 
 
@@ -84,7 +85,7 @@ int main(int argc, char **argv)
 		memcpy(sendbuf,stringinfo, sizeOfHeader);
 		memcpy(sendbuf+sizeOfHeader, buff, n);
 
-		printf("print size of binary data %d    %d  \n", sizeof sendbuf ,sizeof buff);
+		printf("print size of binary data %d    %d   %d   %d\n", sizeof sendbuf ,sizeof buff,total_frag,frag_no);
 		frag_no++;
 		
 	    	sendto(s, sendbuf, sizeof sendbuf , 0 , (struct sockaddr *) &si_other, slen);
