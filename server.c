@@ -23,6 +23,7 @@ char filedata[1000];
  
 void die(char *s)
 {
+	
     perror(s);
     exit(1);
 }
@@ -39,6 +40,7 @@ int main (int argc, char *argv[])
 
 
 	unsigned int curr_frag = 1;
+	int file_exist = 0;
 
 
 
@@ -72,13 +74,17 @@ int main (int argc, char *argv[])
     {
         
         fflush(stdout);
-        
+
         //try to receive some data, this is a blocking call
        	if (recvfrom(s, buf, BUFLEN, 0, (struct sockaddr *) &si_other, &slen) == -1)
         {
             die("recvfrom()");
         }
+
 	
+
+
+
 	//parsing
 	struct packet P;
 	int count = 0;
@@ -161,16 +167,37 @@ int main (int argc, char *argv[])
 	int sizeOfHeader = strlen(stringinfo)+1;
 	//printf("check binary data size and head size  %d ----- %d  ",P.size, sizeOfHeader);
 	printf("%d:%d:%d:%s:\n" , P.total_frag, P.frag_no , P.size, P.filename );
+	printf("%d\n" , curr_frag );
 	memcpy(P.filedata,buf+sizeOfHeader, P.size);
 
 
+	
 
+	
 
 	if (P.frag_no == curr_frag){
-
-
 		char name[100]="cpy_";
 		strcat(name,P.filename);
+
+		if(curr_frag==1){
+			if(file_exist==0){
+				FILE *fp_check ;
+				if (fp_check = fopen(name, "r") ){
+					  remove(name);
+					  file_exist = 1;
+			
+				}
+			}
+		}
+		
+
+		
+
+
+		
+
+
+
 		FILE *fp = fopen(name, "ab");
 	
 		fwrite(P.filedata, sizeof P.filedata, 1, fp);
@@ -186,16 +213,16 @@ int main (int argc, char *argv[])
 		memcpy(buf,packetloss, sizeof packetloss);
 
 		
-		if (sendto(s, buf, sizeof buf, 0, (struct sockaddr*) si_other, slen) == -1)
+		if (sendto(s, buf, sizeof buf, 0, (struct sockaddr*) &si_other, slen) == -1)
 		{
 		    die("sendto()");
 		}
 		
-
+		
 		
 	}
 	else{
-
+		
 		char packetloss[1024];
 		sprintf(packetloss, "-1:%d",curr_frag);
 		memcpy(buf,packetloss, sizeof packetloss);
@@ -208,11 +235,13 @@ int main (int argc, char *argv[])
 	
 
 	}
-
-	if (curr_frag == P.total_frag)
-		curr_frag =1;
-		
-
+	
+	
+	if (curr_frag == P.total_frag+1)
+	{
+			file_exist=0;
+			curr_frag =1;
+	}
     }
  
 
