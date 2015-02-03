@@ -27,9 +27,31 @@ void die(char *s)
     exit(1);
 }
  
-int main(void)
+int main (int argc, char *argv[])
 {
-    //struct packet packets[];
+    	
+	if ( argc != 2 ) /* argc should be 2 for correct execution */
+   	{
+        /* We print argv[0] assuming it is the program name */
+        printf( "only one arugment allowed" );
+	exit;
+    	}
+
+	/*
+    	int arrSize = 1000;
+	struct packet *packets = malloc( arrSize * sizeof *packets );
+
+
+	struct packet *tmp = realloc( packet, sizeof *packets * ( arrSize * 2));
+	if ( tmp )
+	{
+	  packets = tmp;
+	  arrSize *= 2;
+	}
+	*/
+
+
+
     struct sockaddr_in si_me, si_other;
      
     int s, i, slen = sizeof(si_other) , recv_len;
@@ -47,7 +69,7 @@ int main(void)
     memset((char *) &si_me, 0, sizeof(si_me));
      
     si_me.sin_family = AF_INET;
-    si_me.sin_port = htons(PORT);
+    si_me.sin_port = htons(atoi(argv[1]));
     si_me.sin_addr.s_addr = htonl(INADDR_ANY);
      
     //bind socket to port
