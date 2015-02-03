@@ -9,7 +9,7 @@
 #include<sys/socket.h>
  
 
-#define BUFLEN 512  //Max length of buffer
+#define BUFLEN 1000  //Max length of buffer
 
  
 struct packet { 
@@ -17,8 +17,9 @@ unsigned int total_frag;
 unsigned int frag_no; 
 unsigned int size; 
 char* filename; 
-char filedata[512]; 
+char filedata[1000]; 
 };
+
 
 
 void die(char *s)
@@ -26,6 +27,78 @@ void die(char *s)
     perror(s);
     exit(1);
 }
+
+
+
+void send_packet(char* filename, struct sockaddr_in* si_other, int s, int slen){
+	size_t n=1;
+	FILE * fd = fopen(filename, "rb");
+
+
+	unsigned int frag_no = 1;
+	fseek(fd, 0L, SEEK_END);
+	size_t filesize = ftell(fd);
+	unsigned int total_frag = filesize/BUFLEN;
+	if(filesize%BUFLEN!=0)
+		total_frag= filesize/BUFLEN+1;
+	fclose(fd);
+	fd = fopen(filename, "rb");
+	
+	unsigned char buff[BUFLEN];
+	unsigned char ack[100];
+	
+	
+	while (1) {
+		/*n represent number of bythes received*/
+	   	n = fread(buff, 1, sizeof buff, fd);
+		if(n==0)
+			break;
+		char stringinfo[1024];
+		
+		sprintf(stringinfo, "%d:%d:%d:%s:",total_frag,frag_no,n,filename);
+		int len = strlen(stringinfo)+1+n;
+		int sizeOfHeader = strlen(stringinfo)+1;
+		char sendbuf[len];
+		memcpy(sendbuf,stringinfo, sizeOfHeader);
+		memcpy(sendbuf+sizeOfHeader, buff, n);
+
+		printf("print size of binary data %d    %d   %d   %d\n", sizeof sendbuf ,sizeof buff,total_frag,frag_no);
+		frag_no++;
+		
+	    sendto(s, sendbuf, sizeof sendbuf , 0 , (struct sockaddr *) si_other, slen);
+	    
+	    if (recvfrom(s, ack, sizeof ack, 0, (struct sockaddr *) &si_other, &slen) == -1)
+		{
+		        die("recvfrom()");
+		}
+		else{
+			char newstring[100];
+			strcpy(newstring, ack);
+			char* token = strtok(newstring, ":");
+			char first[10],second[10];
+			int i =0;
+			for(i =1;i<2;i++){
+				token = strtok(NULL, ":");
+				if(i==1)
+					strcpy(first,token);
+				else
+					strcpy(second,token);
+			}	
+			
+			if(atoi(first)==-1)
+				sendto(s, sendbuf, sizeof sendbuf , 0 , (struct sockaddr *) &si_other, slen);
+		}
+		
+	} 
+	if (fclose(fd)) perror("close input file");
+	frag_no = 0;
+
+}
+
+
+
+
+
 
 
 int main(int argc, char **argv)
@@ -55,45 +128,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-	size_t n=1;
-	FILE * fd = fopen(filename, "rb");
-
-
-	unsigned int frag_no = 1;
-	fseek(fd, 0L, SEEK_END);
-	size_t filesize = ftell(fd);
-	unsigned int total_frag = filesize/BUFLEN;
-	if(filesize%BUFLEN!=0)
-		total_frag= filesize/BUFLEN+1;
-	fclose(fd);
-	fd = fopen(filename, "rb");
-	
-
-
-
-	unsigned char buff[BUFLEN];
-	while (1) {
-	   	n = fread(buff, 1, sizeof buff, fd);
-		if(n==0)
-			break;
-		char stringinfo[1024];
-		
-		sprintf(stringinfo, "%d:%d:%d:%s:",total_frag,frag_no,n,filename);
-		int len = strlen(stringinfo)+1+n;
-		int sizeOfHeader = strlen(stringinfo)+1;
-		char sendbuf[len];
-		memcpy(sendbuf,stringinfo, sizeOfHeader);
-		memcpy(sendbuf+sizeOfHeader, buff, n);
-
-		printf("print size of binary data %d    %d   %d   %d\n", sizeof sendbuf ,sizeof buff,total_frag,frag_no);
-		frag_no++;
-		
-	    	sendto(s, sendbuf, sizeof sendbuf , 0 , (struct sockaddr *) &si_other, slen);
-		
-	} 
-	if (fclose(fd)) perror("close input file");
-	frag_no = 0;
-
+	send_packet(filename, &si_other, s, slen);
 
     close(s);
     return 0;
