@@ -171,7 +171,6 @@ int main (int argc, char *argv[])
 	memcpy(P.filedata,buf+sizeOfHeader, P.size);
 
 
-	
 
 	
 
@@ -200,7 +199,7 @@ int main (int argc, char *argv[])
 
 		FILE *fp = fopen(name, "ab");
 	
-		fwrite(P.filedata, sizeof P.filedata, 1, fp);
+		fwrite(P.filedata, P.size, 1, fp);
 	
 		fclose(fp);
 
