@@ -9,7 +9,7 @@
 #include<sys/socket.h>
  
 #define SERVER "127.0.0.1"
-#define BUFLEN 1024  //Max length of buffer
+#define BUFLEN 512  //Max length of buffer
 #define PORT 8000   //The port on which to send data
  
 struct packet { 
@@ -17,7 +17,7 @@ unsigned int total_frag;
 unsigned int frag_no; 
 unsigned int size; 
 char* filename; 
-char filedata[1000]; 
+char filedata[512]; 
 };
 
 
@@ -31,7 +31,7 @@ int main(void)
 {
     struct sockaddr_in si_other;
     int s, i, slen=sizeof(si_other);
-    char buf[BUFLEN];
+
     
     //IPPROTO_UDP
     if ( (s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
@@ -72,7 +72,7 @@ int main(void)
 
 
 
-	unsigned char buff[1024];
+	unsigned char buff[BUFLEN];
 	while (1) {
 	   	n = fread(buff, 1, sizeof buff, fd);
 		if(n==0)
@@ -86,10 +86,11 @@ int main(void)
 		memcpy(sendbuf,stringinfo, sizeOfHeader);
 		memcpy(sendbuf+sizeOfHeader, buff, n);
 
-		//printf("print size of binary data %d    %d  \n", (sendbuf+sizeOfHeader),n);
+		printf("print size of binary data %d    %d  \n", sizeof sendbuf ,sizeof buff);
 		frag_no++;
 		
 	    	sendto(s, sendbuf, sizeof sendbuf , 0 , (struct sockaddr *) &si_other, slen);
+		
 	} 
 	if (fclose(fd)) perror("close input file");
 	frag_no = 0;

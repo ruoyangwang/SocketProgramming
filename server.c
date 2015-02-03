@@ -7,8 +7,9 @@
 #include<stdlib.h> //exit(0);
 #include<arpa/inet.h>
 #include<sys/socket.h>
+#include<sys/ioctl.h>
  
-#define BUFLEN 1024  //Max length of buffer
+#define BUFLEN 1000  //Max length of UDP datagram
 #define PORT 8000   //The port on which to listen for incoming data
 
 struct packet { 
@@ -16,7 +17,7 @@ unsigned int total_frag;
 unsigned int frag_no; 
 unsigned int size; 
 char* filename; 
-char filedata[1024]; 
+char filedata[512]; 
 };
 
  
@@ -28,10 +29,12 @@ void die(char *s)
  
 int main(void)
 {
+    //struct packet packets[];
     struct sockaddr_in si_me, si_other;
      
     int s, i, slen = sizeof(si_other) , recv_len;
     unsigned char buf[BUFLEN];
+    int frag_counter = 1; 
      
     //create a UDP socket
     //IPPROTO_UDP
@@ -55,38 +58,37 @@ int main(void)
      
 
 
-
+	
     //keep listening for data
     while(1)
     {
         
         fflush(stdout);
-         
+        
         //try to receive some data, this is a blocking call
        	if (recvfrom(s, buf, BUFLEN, 0, (struct sockaddr *) &si_other, &slen) == -1)
         {
             die("recvfrom()");
         }
          
-        //puts(buf);
-         
-        //print details of the client/peer and the data received
+
         //printf("Received packet from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
        // printf("Data: %s\n" , buf);
          
 
-	
 	//parsing
-	struct packet P;/*
+	struct packet P;
 	int count = 0;
 	char *total_frag = ""; 
 	char *frag_no = ""; 
 	char *size = ""; 
 	char *filename = "";
-	char filedata[1024] = ""; 
+	char filedata[512] = ""; 
 
-	for (i=0;i <1024;i++)
+	for (i=0;i <1000;i++)
 	{
+
+		
 		if (buf[i] != ':')
 		{
 			if (count == 0){
@@ -108,7 +110,7 @@ int main(void)
 				    char *str2 = malloc(len + 1 + 1 ); 
 				    strcpy(str2, frag_no);
 				    str2[len] = buf[i];
-				    str2[len + 1] = '\0';
+				   str2[len + 1] = '\0';
 
 				
 				    frag_no = str2;
@@ -119,7 +121,7 @@ int main(void)
 				    char *str2 = malloc(len + 1 + 1 ); 
 				    strcpy(str2, size);
 				    str2[len] = buf[i];
-				    str2[len + 1] = '\0';
+				   str2[len + 1] = '\0';
 
 				
 				    size = str2;
@@ -129,10 +131,14 @@ int main(void)
 				    char *str2 = malloc(len + 1 + 1 ); 
 				    strcpy(str2, filename);
 				    str2[len] = buf[i];
-				    str2[len + 1] = '\0';
+				   str2[len + 1] = '\0';
 
 				
 				    filename = str2;
+				    
+			}else if (count == 4)
+			{
+				break;
 			}
 
 			
@@ -155,27 +161,32 @@ int main(void)
 
 	
 
-	//P.filedata = filedata;
-	//printf("%s\n" , P.filedata );
 	char stringinfo[1024];
 	sprintf(stringinfo, "%d:%d:%d:%s:",P.total_frag, P.frag_no , P.size, P.filename);
 	int sizeOfHeader = strlen(stringinfo)+1;
-	printf("check binary data size and head size  %d ----- %d  ",P.size, sizeOfHeader);
+	//printf("check binary data size and head size  %d ----- %d  ",P.size, sizeOfHeader);
 	printf("%d:%d:%d:%s:\n" , P.total_frag, P.frag_no , P.size, P.filename );
 
-	*/
+	
 
-	memcpy(P.filedata,buf, sizeof buf);
+	memcpy(P.filedata,buf+sizeOfHeader, P.size);
+	printf("filedata--%d Psize-----%d\n", sizeof P.filedata, P.size  );
+	//printf("%s\n", P.filedata  );
+
+
+
+
 
 
 	//start creating files
 	FILE *fp = fopen("test_copy.png", "ab");
-	//fprintf(fp, "%s", buf);
 	
 	fwrite(P.filedata, sizeof P.filedata, 1, fp);
 	
-
 	fclose(fp);
+	
+
+
 
 
 
