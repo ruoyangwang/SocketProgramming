@@ -8,9 +8,9 @@
 #include<arpa/inet.h>
 #include<sys/socket.h>
  
-#define SERVER "127.0.0.1"
+
 #define BUFLEN 512  //Max length of buffer
-#define PORT 8000   //The port on which to send data
+
  
 struct packet { 
 unsigned int total_frag; 
@@ -27,8 +27,13 @@ void die(char *s)
     exit(1);
 }
  
-int main(void)
+int main(int argc, char **argv)
 {
+	char *SERVER = argv[1];
+	int PORT = atoi(argv[2]);
+	int listenPortNum = atoi(argv[3]);
+	char *filename = argv[4];
+	
     struct sockaddr_in si_other;
     int s, i, slen=sizeof(si_other);
 
@@ -43,20 +48,13 @@ int main(void)
     si_other.sin_family = AF_INET;
     si_other.sin_port = htons(PORT);
      
-    if (inet_aton(SERVER , &si_other.sin_addr) == 0) 
+    if (inet_aton(SERVER, &si_other.sin_addr) == 0) 
     {
         fprintf(stderr, "inet_aton() failed\n");
         exit(1);
     }
 
-
-	
-
-
-
-	
 	size_t n=1;
-	char *filename = "test.png";
 	FILE * fd = fopen("test.png", "rb");
 
 
