@@ -81,7 +81,7 @@ void send_packet(char* filename, struct sockaddr_in* si_other, int s, int slen){
 			
 			char first[10],second[10];
 			strcpy(first,token);
-			printf( "%s  %s  %s\n",ack,first,second);
+			//printf( "%s  %s  %s\n",ack,first,second);
 			if(atoi(first)==-1)
 				sendto(s, sendbuf, sizeof sendbuf , 0 , (struct sockaddr *) si_other, slen);
 		}
