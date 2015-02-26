@@ -9,12 +9,15 @@
 #include "client.h"
 
 void *connection_handler(void *);
-#define MAX_NAME 2000
-#define MAX_DATA 2000
+int Read_login(const char*username, const char *passwd);
+
 
 
 int main(int argc , char *argv[])
 {
+
+
+	
     int socket_desc , new_socket , c , *new_sock;
     struct sockaddr_in server , client;
     char *message;
@@ -82,30 +85,81 @@ void *connection_handler(void *socket_desc)
     int sock = *(int*)socket_desc;
     int read_size;
     char *message , client_message[2000];
-    struct lab3message packetfromclient;
-
+    struct lab3message packetFromClient;
+	struct lab3message packetToClient;
     //Receive a message from client
-    while( (read_size = recv(sock , &packetfromclient , sizeof(packetfromclient) , 0)) > 0 )
+    while( (read_size = recv(sock , &packetFromClient , sizeof(packetFromClient) , 0)) > 0 )
     {
-	
-	printf("%s\n",packetfromclient.data);
-	
+		if(read_size == 0)
+		{
+		    puts("Client disconnected");
+		    fflush(stdout);
+		}
+		else if(read_size == -1)
+		{
+		    perror("recv failed");
+		}
+		
+		switch(packetFromClient.type){
+			case 0:						//case for handling exit
+				
+			
+			case 10:					//case for handling login
+				if(Read_login(packetFromClient.source, packetFromClient.data)){
+					;
+				}
+				else
+					;
+				
+			case 20:					//case for handling join session
+				;
+			case 50:					//case for leaving new session
+				;
+			case 60:					//case for creating new session
+				;
+			case 100:					//case for sending message
+				;
+			
+			case 200:					//case for getting list
+				;
+			
+			
+		
+		
+		
+		
+		
+		
+		
+		}
         //Send the message back to client
-        write(sock , &packetfromclient , sizeof(packetfromclient));
+        write(sock , &packetToClient , sizeof(packetToClient));
     }
 
-    if(read_size == 0)
-    {
-        puts("Client disconnected");
-        fflush(stdout);
-    }
-    else if(read_size == -1)
-    {
-        perror("recv failed");
-    }
-
+   
     //Free the socket pointer
     free(socket_desc);
 
     return 0;
+}
+
+
+
+int Read_login(const char*username, const char *passwd){
+	FILE* fp;
+	fp = fopen("login.txt", "r");
+	char * line = NULL;
+    size_t len = 0;
+    size_t read;
+    
+	while ((read = getline(&line, &len, fp)) != -1) {
+		    ;
+    }
+
+
+
+
+
+
+
 }
