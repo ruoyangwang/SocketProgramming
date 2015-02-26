@@ -85,9 +85,9 @@ int main(int argc , char *argv[])
 		char server_ip[1000] ;
 		char server_port[1000] ;
 		strcpy(client_id,arg1);
-		strcpy(client_pw,arg2); 
-		strcpy(server_ip,arg3);
-		strcpy(server_port,arg4);
+		client_pw = arg2; 
+		server_ip = arg3;
+		server_port = arg4;
 
 		//Create socket from client input
 	    	sock = socket(AF_INET , SOCK_STREAM , 0);
