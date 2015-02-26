@@ -6,6 +6,7 @@
 #include<unistd.h>    //write
 #include <stdbool.h> 
 #include<pthread.h> //for threading , link with lpthread
+#include "client.h"
 
 void *connection_handler(void *);
 #define MAX_NAME 2000
@@ -81,13 +82,16 @@ void *connection_handler(void *socket_desc)
     int sock = *(int*)socket_desc;
     int read_size;
     char *message , client_message[2000];
-
+    struct lab3message packetfromclient;
 
     //Receive a message from client
-    while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
+    while( (read_size = recv(sock , &packetfromclient , sizeof(packetfromclient) , 0)) > 0 )
     {
+	
+	printf("%s\n",packetfromclient.data);
+	
         //Send the message back to client
-        write(sock , client_message , strlen(client_message));
+        write(sock , &packetfromclient , sizeof(packetfromclient));
     }
 
     if(read_size == 0)

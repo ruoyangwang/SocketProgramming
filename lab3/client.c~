@@ -20,7 +20,7 @@ int main(int argc , char *argv[])
 
     int sock;
     struct sockaddr_in server;
-    char message[1000], message_tmp[1000] , server_reply[2000], command[2000], ip_addr[100];
+    char message[1000], message_tmp[1000] , server_reply[2000], command[2000], ip_addr[100], buffer[1000];
     char arg1[1000], arg2[1000], arg3[1000], arg4[1000];
 
 	
@@ -101,25 +101,31 @@ int main(int argc , char *argv[])
 	    	}
 
 		struct lab3message packet;
-		packet.type = 0;
+		packet.type = LOGIN;
+		strcpy(packet.source, client_id);
+		strcpy(packet.data , client_pw);
+		packet.size = sizeof(packet.data);
+
+
+		//memcpy(buffer,&packet,sizeof(buffer));
 		
-
-
-		 if( send(sock , message , strlen(message) , 0) < 0)
+		 if( send(sock , &packet , sizeof(packet) , 0) < 0)
 		{
 		    puts("Send failed");
 		    return 1;
 		}
 
+
+		struct lab3message packetfromserver;
 		//Receive a reply from the server
-		if( recv(sock , server_reply , 2000 , 0) < 0)
+		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
 		{
 		    puts("recv failed");
 		    break;
 		}
 
 		logged_in = 1;
-		 printf("Server Reply: %s\n", server_reply);
+		 printf("Server Reply: %s\n", packetfromserver.id);
    		 server_reply[0]='\0';
 	}
 	else

@@ -6,17 +6,11 @@
 #include<unistd.h>    //write
 #include <stdbool.h> 
 #include<pthread.h> //for threading , link with lpthread
+#include "client.h"
 
 void *connection_handler(void *);
 #define MAX_NAME 2000
 #define MAX_DATA 2000
-
-struct lab3message { 
- unsigned int type; 
- unsigned int size; 
- unsigned char source[MAX_NAME]; 
- unsigned char data[MAX_DATA]; 
-};
 
 
 int main(int argc , char *argv[])
@@ -35,7 +29,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8000 );
+    server.sin_port = htons( 8080 );
 
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -88,13 +82,16 @@ void *connection_handler(void *socket_desc)
     int sock = *(int*)socket_desc;
     int read_size;
     char *message , client_message[2000];
-
+    struct lab3message packetfromclient;
 
     //Receive a message from client
-    while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
+    while( (read_size = recv(sock , &packetfromclient , sizeof(packetfromclient) , 0)) > 0 )
     {
+	
+	printf("%s\n",packetfromclient.data);
+	
         //Send the message back to client
-        write(sock , client_message , strlen(client_message));
+        write(sock , &packetfromclient , sizeof(packetfromclient));
     }
 
     if(read_size == 0)
