@@ -10,14 +10,6 @@ bool logged_in = 0;
 
 
 
-struct lab3message { 
- unsigned int type; 
- unsigned int size; 
- unsigned char source[MAX_NAME]; 
- unsigned char data[MAX_DATA]; 
-};
-
-
 
 
 int main(int argc , char *argv[])
