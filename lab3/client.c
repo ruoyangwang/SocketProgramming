@@ -7,8 +7,11 @@
 
 
 bool logged_in = 0;
-
-
+char client_id[1000] ;
+char client_pw[1000] ; 
+char server_ip[1000] ;
+char server_port[1000] ;
+int sock;
 
 
 
@@ -18,7 +21,7 @@ int main(int argc , char *argv[])
 
     puts("Welcome, don't forget to /login first !");
 
-    int sock;
+    
     struct sockaddr_in server;
     char message[1000], message_tmp[1000] , server_reply[2000], command[2000], ip_addr[100], buffer[1000];
     char arg1[1000], arg2[1000], arg3[1000], arg4[1000];
@@ -72,10 +75,7 @@ int main(int argc , char *argv[])
 	else if (strcmp(command,"/login") == 0 && !logged_in)
 	{
 
-		char client_id[1000] ;
-		char client_pw[1000] ; 
-		char server_ip[1000] ;
-		char server_port[1000] ;
+		
 		strcpy(client_id,arg1);
 		strcpy(client_pw,arg2); 
 		strcpy(server_ip,arg3);
@@ -100,16 +100,16 @@ int main(int argc , char *argv[])
 			return 1;
 	    	}
 
-		struct lab3message packet;
-		packet.type = LOGIN;
-		strcpy(packet.source, client_id);
-		strcpy(packet.data , client_pw);
-		packet.size = sizeof(packet.data);
+		struct lab3message packettoserver;
+		packettoserver.type = LOGIN;
+		strcpy(packettoserver.source, client_id);
+		strcpy(packettoserver.data , client_pw);
+		packettoserver.size = sizeof(packettoserver.data);
 
 
 		//memcpy(buffer,&packet,sizeof(buffer));
 		
-		 if( send(sock , &packet , sizeof(packet) , 0) < 0)
+		 if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
 		{
 		    puts("Send failed");
 		    return 1;
@@ -124,29 +124,22 @@ int main(int argc , char *argv[])
 		    break;
 		}
 
-		logged_in = 1;
-		 printf("Server Reply: %s\n", packetfromserver.source);
-   		 server_reply[0]='\0';
+		if(packetfromserver.type=LO_ACK)		
+			logged_in = 1;
+		if(packetfromserver.type=LO_NAK)		
+			 printf("LOGIN FAILED\n");
+
+
+
+	
 	}
 	else
 	{
 
-		//Send some data
-		if( send(sock , message , strlen(message) , 0) < 0)
-		{
-		    puts("Send failed");
-		    return 1;
-		}
 
-		//Receive a reply from the server
-		if( recv(sock , server_reply , 2000 , 0) < 0)
-		{
-		    puts("recv failed");
-		    break;
-		}
+		command_handler(command, arg1, arg2, arg3, arg4, message);
 
-		 printf("Server Reply: %s\n", server_reply);
-   		 server_reply[0]='\0';
+		
 
 	}
         
@@ -157,4 +150,215 @@ int main(int argc , char *argv[])
 
     close(sock);
     return 0;
+}
+
+
+
+
+
+void command_handler(char command[2000], char arg1[2000], char arg2[2000], char arg3[2000], char arg4[2000], char message[2000]){
+
+	
+	if (command == "/logout")
+	{
+		struct lab3message packettoserver;
+		packettoserver.type = EXIT;
+		strcpy(packettoserver.source, client_id);
+		//strcpy(packettoserver.data , client_pw);
+		packettoserver.size = sizeof(packettoserver.data);
+
+	    	//Send some data
+		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		{
+		    puts("Send failed");
+		}
+
+
+		//Receive a reply from the server
+		struct lab3message packetfromserver;
+		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
+		{
+		    puts("recv failed");
+		}
+
+
+
+
+	}
+	else if (command == "/joinsession")
+	{
+	    	struct lab3message packettoserver;
+		packettoserver.type = JOIN;
+		strcpy(packettoserver.source, client_id);
+		strcpy(packettoserver.data , arg1);
+		packettoserver.size = sizeof(packettoserver.data);
+
+
+		//Send some data
+		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		{
+		    puts("Send failed");
+		}
+
+
+		//Receive a reply from the server
+		struct lab3message packetfromserver;
+		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
+		{
+		    puts("recv failed");
+		}
+
+		if(packetfromserver.type=JN_ACK)		
+			 printf("JOIN SESSION SECCESS\n");
+		if(packetfromserver.type=JN_NAK)		
+			 printf("JOIN SESSION FAILED\n");
+
+
+	}
+	else if (command == "/leavesession")
+	{
+	    	struct lab3message packettoserver;
+		packettoserver.type = LEAVE_SESS;
+		strcpy(packettoserver.source, client_id);
+		//strcpy(packettoserver.data , arg1);
+		packettoserver.size = sizeof(packettoserver.data);
+
+
+		//Send some data
+		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		{
+		    puts("Send failed");
+		}
+
+
+		//Receive a reply from the server
+		struct lab3message packetfromserver;
+		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
+		{
+		    puts("recv failed");
+		}
+
+
+
+	}
+	else if (command == "/createsession")
+	{
+	    	struct lab3message packettoserver;
+		packettoserver.type = NEW_SESS;
+		strcpy(packettoserver.source, client_id);
+		strcpy(packettoserver.data , arg1);
+		packettoserver.size = sizeof(packettoserver.data);
+
+
+		//Send some data
+		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		{
+		    puts("Send failed");
+		}
+
+
+		//Receive a reply from the server
+		struct lab3message packetfromserver;
+		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
+		{
+		    puts("recv failed");
+		}
+
+		if(packetfromserver.type=NS_ACK)		
+			 printf("CREATE NEW SESSION SECCESS\n");
+		
+
+
+
+
+	}
+	else if (command == "/list")
+	{
+	    	struct lab3message packettoserver;
+		packettoserver.type = QUERY;
+		strcpy(packettoserver.source, client_id);
+		//strcpy(packettoserver.data , arg1);
+		packettoserver.size = sizeof(packettoserver.data);
+
+
+		//Send some data
+		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		{
+		    puts("Send failed");
+		}
+
+
+		//Receive a reply from the server
+		struct lab3message packetfromserver;
+		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
+		{
+		    puts("recv failed");
+		}
+
+		if(packetfromserver.type=QU_ACK)		
+			 printf("GOT LIST, PRINTING\n");
+
+	}
+	else if (command == "/quit")
+	{
+	    	struct lab3message packettoserver;
+		packettoserver.type = EXIT;
+		strcpy(packettoserver.source, client_id);
+		//strcpy(packettoserver.data , client_pw);
+		packettoserver.size = sizeof(packettoserver.data);
+
+
+
+		//Send some data
+		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		{
+		    puts("Send failed");
+		}
+
+
+		//Receive a reply from the server
+		struct lab3message packetfromserver;
+		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
+		{
+		    puts("recv failed");
+		}
+
+
+
+
+
+	}
+	else
+	{
+	    	struct lab3message packettoserver;
+		packettoserver.type = MESSAGE;
+		strcpy(packettoserver.source, client_id);
+		//strcpy(packettoserver.data , client_pw);
+		packettoserver.size = sizeof(packettoserver.data);
+
+
+		//Send some data
+		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		{
+		    puts("Send failed");
+		}
+
+
+		//Receive a reply from the server
+		struct lab3message packetfromserver;
+		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
+		{
+		    puts("recv failed");
+		}
+
+
+
+
+
+	}
+	
+
+
+
+
 }

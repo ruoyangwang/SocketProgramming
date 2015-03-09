@@ -40,6 +40,6 @@ struct lab3message {
 
 
 
-
+void command_handler(char command[2000], char arg1[2000], char arg2[2000], char arg3[2000], char arg4[2000], char message[2000]);
 
 #endif
