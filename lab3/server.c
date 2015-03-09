@@ -108,11 +108,15 @@ void *connection_handler(void *socket_desc)
 				
 			
 			case LOGIN:					//case for handling login
-				if(Read_login(packetFromClient.source, packetFromClient.data)){
+				printf("login section, mock to send back ACK\n");
+				packetToClient.type = LO_ACK;
+				write(sock , &packetToClient , sizeof(packetToClient));
+				/*if(Read_login(packetFromClient.source, packetFromClient.data)){
 					;
 				}
 				else
-					;
+					;*/
+					break;
 				
 			case JOIN:					//case for handling join session
 				if(check_session_exist(packetFromClient.data, packetFromClient.source, sock)){
@@ -125,8 +129,10 @@ void *connection_handler(void *socket_desc)
 					packetToClient.type = JN_NAK;
 					 write(sock , &packetToClient , sizeof(packetToClient));
 				}
+				break;
 			case LEAVE_SESS:					//case for leaving new session
 				;
+				break;
 			case NEW_SESS:					//case for creating new session
 				if(create_new_session(packetFromClient.data, packetFromClient.source, sock)){
 					printf("the client just start a new session \n");
@@ -138,12 +144,13 @@ void *connection_handler(void *socket_desc)
 					packetToClient.type = JN_NAK;
 					write(sock , &packetToClient , sizeof(packetToClient));	
 				}
+				break;
 			case MESSAGE:					//case for sending message
 				;
-			
+				break;
 			case QUERY:					//case for getting list
 				;
-			
+				break;
 			
 		
 		

@@ -3,4 +3,4 @@ all: server.c client.c
 	gcc -pthread  -o client client.c
 	
 clean: 
-	${RM} *.c~ deliver server *.~
+	${RM} *.c~ client server *.*~

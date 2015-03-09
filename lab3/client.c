@@ -124,9 +124,9 @@ int main(int argc , char *argv[])
 		    break;
 		}
 
-		if(packetfromserver.type=LO_ACK)		
+		if(packetfromserver.type==LO_ACK)		
 			logged_in = 1;
-		if(packetfromserver.type=LO_NAK)		
+		if(packetfromserver.type==LO_NAK)		
 			 printf("LOGIN FAILED\n");
 
 
@@ -185,7 +185,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 
 
 	}
-	else if (command == "/joinsession")
+	else if (!strcmp(command,"/joinsession"))
 	{
 	    	struct lab3message packettoserver;
 		packettoserver.type = JOIN;
@@ -208,14 +208,14 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		    puts("recv failed");
 		}
 
-		if(packetfromserver.type=JN_ACK)		
+		if(packetfromserver.type==JN_ACK)		
 			 printf("JOIN SESSION SECCESS\n");
-		if(packetfromserver.type=JN_NAK)		
+		if(packetfromserver.type==JN_NAK)		
 			 printf("JOIN SESSION FAILED\n");
 
 
 	}
-	else if (command == "/leavesession")
+	else if (!strcmp(command,"/leavesession"))
 	{
 	    	struct lab3message packettoserver;
 		packettoserver.type = LEAVE_SESS;
