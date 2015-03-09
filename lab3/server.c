@@ -10,8 +10,11 @@
 
 void *connection_handler(void *);
 int Read_login(const char*username, const char *passwd);
+bool check_session_exist(const char* sessionName, const char *userName, int sock );
+bool create_new_session(const char* sessionName,  const char *userName, int sock);
+void add_node();
 
-
+static session *Shead = NULL;
 
 int main(int argc , char *argv[])
 {
@@ -101,26 +104,44 @@ void *connection_handler(void *socket_desc)
 		}
 		
 		switch(packetFromClient.type){
-			case 0:						//case for handling exit
+			case EXIT:						//case for handling exit
 				
 			
-			case 10:					//case for handling login
+			case LOGIN:					//case for handling login
 				if(Read_login(packetFromClient.source, packetFromClient.data)){
 					;
 				}
 				else
 					;
 				
-			case 20:					//case for handling join session
+			case JOIN:					//case for handling join session
+				if(check_session_exist(packetFromClient.data, packetFromClient.source, sock)){
+					printf("successfully insert this client into the according session \n");
+					packetToClient.type = JN_ACK;
+					 write(sock , &packetToClient , sizeof(packetToClient));
+				}
+				else{
+					printf("cannot find the session, please create session first \n");
+					packetToClient.type = JN_NAK;
+					 write(sock , &packetToClient , sizeof(packetToClient));
+				}
+			case LEAVE_SESS:					//case for leaving new session
 				;
-			case 50:					//case for leaving new session
-				;
-			case 60:					//case for creating new session
-				;
-			case 100:					//case for sending message
+			case NEW_SESS:					//case for creating new session
+				if(create_new_session(packetFromClient.data, packetFromClient.source, sock)){
+					printf("the client just start a new session \n");
+					packetToClient.type = JN_ACK;
+					write(sock , &packetToClient , sizeof(packetToClient));	
+				}
+				else{
+					printf("cannot create session, session might already exist \n");
+					packetToClient.type = JN_NAK;
+					write(sock , &packetToClient , sizeof(packetToClient));	
+				}
+			case MESSAGE:					//case for sending message
 				;
 			
-			case 200:					//case for getting list
+			case QUERY:					//case for getting list
 				;
 			
 			
@@ -163,3 +184,68 @@ int Read_login(const char*username, const char *passwd){
 
 
 }
+
+
+
+bool check_session_exist(const char* sessionName,  const char *userName, int sock){
+	session * temp =Shead;
+	while(temp!=NULL){
+		if(strcmp(temp->sessionName,sessionName)==0){
+			userinfo *head = temp->head;
+			userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
+			strcpy(newuser->userName,userName);
+			newuser->sock = sock;
+			
+			while(head->next!=NULL)
+				head = head->next;
+			head = newuser;
+
+			return true;
+		}
+		temp = temp->next;
+	}
+	return false;
+
+}
+
+
+
+bool create_new_session(const char* sessionName,  const char *userName, int sock){
+	session * temp =Shead;
+	if(temp == NULL){
+		session *newsession = (session *)malloc(sizeof(session));
+		strcpy(newsession->sessionName,sessionName);
+		temp = newsession;
+		
+		userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
+		strcpy(newuser->userName,userName);
+		newuser->sock = sock;
+		newsession->head = newuser;
+		
+		return true;
+	}
+	
+	while(temp->next!=NULL){
+		if(strcmp(temp->sessionName,sessionName)==0)
+				return false;
+		temp = temp->next;
+	}
+	
+	session *newsession = (session *)malloc(sizeof(session));
+	strcpy(newsession->sessionName,sessionName);
+	temp->next = newsession;
+		
+	userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
+	strcpy(newuser->userName,userName);
+	newuser->sock = sock;
+	newsession->head = newuser;
+	
+	return true;
+	
+
+}
+
+
+
+
+
