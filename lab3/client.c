@@ -54,7 +54,7 @@ int main(int argc , char *argv[])
 
 	int counter = 0;
 	while (token != NULL){
-		printf( "%s \n",token);
+		//printf( "%s \n",token);
 		if (counter ==0)
 			strcpy(command,token);
 		if (counter ==1)
@@ -69,8 +69,6 @@ int main(int argc , char *argv[])
 		counter++;
 	}
 	counter = 0;
-
-
 
 	if (strcmp(command,"/login") != 0 && !logged_in)
 	{
@@ -95,7 +93,7 @@ int main(int argc , char *argv[])
 	    	{
 			printf("Could not create socket");
 	    	}
-	    	puts("Socket created");
+	    	puts("CONNECTED");
 
 	    	server.sin_addr.s_addr = inet_addr(server_ip);
 	    	server.sin_family = AF_INET;
@@ -134,7 +132,7 @@ int main(int argc , char *argv[])
 
 		if(packetfromserver.type==LO_ACK){		
 			logged_in = 1;
-
+			puts("LOGIN SUCCESSFUL");
 			
 			  pthread_t listener_thread;
 			if( pthread_create( &listener_thread , NULL ,  listener , NULL) < 0)
@@ -157,7 +155,7 @@ int main(int argc , char *argv[])
 	{
 
 
-		command_handler(command, arg1, arg2, arg3, arg4, message);
+		command_handler(command, arg1, arg2, arg3, arg4, message_tmp);
 
 		
 	}
@@ -301,7 +299,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		strcat (new_buffer, ":");
 		strcat (new_buffer, curr_sess);
 		strcpy(packettoserver.source, new_buffer);
-		printf("%s\n",new_buffer);
+		
 		
 		strcpy(packettoserver.data , message);
 		packettoserver.size = sizeof(packettoserver.data);
