@@ -41,8 +41,7 @@ int main(int argc , char *argv[])
 
         printf("Enter command: ");
    	fgets(message, sizeof(message),stdin);
-	strncpy(message_tmp, message, strlen(message));
-
+	strncpy(message_tmp, message, sizeof(message));
 	char* token = strtok(message_tmp, " ");
 	int counter = 0;
 	while (token != NULL){
@@ -61,7 +60,6 @@ int main(int argc , char *argv[])
 		counter++;
 	}
 	counter = 0;
-
 
 
 
@@ -144,8 +142,8 @@ int main(int argc , char *argv[])
 
 
 
-
-
+		
+		
 	
 	}
 	else
@@ -155,7 +153,6 @@ int main(int argc , char *argv[])
 		command_handler(command, arg1, arg2, arg3, arg4, message);
 
 		
-
 	}
         
         
@@ -404,10 +401,11 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 
 
 /*
-void listener(){
-
-
-		 while( (read_size = recv(sock , &packetFromClient , sizeof(packetFromClient) , 0)) > 0 )
-
+void listener(void *socket_desc){
+		int sock = *(int*)socket_desc;
+		struct lab3message packetFromServer;
+		 while( (read_size = recv(sock , &packetFromServer , sizeof(packetFromServer) , 0)) > 0 )
+		{
+		}
 
 }*/
