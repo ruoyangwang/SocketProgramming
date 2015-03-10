@@ -1,6 +1,6 @@
-
 #include<stdio.h> //printf
 #include<string.h>    //strlen
+#include<stdlib.h>    //strlen
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
 #include <stdbool.h> 
@@ -127,23 +127,22 @@ int main(int argc , char *argv[])
 
 		if(packetfromserver.type==LO_ACK){		
 			logged_in = 1;
-/*
-			pthread_t listener_thread;
-			new_sock = malloc(1);
-        		*new_sock = new_socket;
-			if( pthread_create( &listener_thread , NULL ,  listener , (void*) new_sock) < 0)
+
+			
+			  pthread_t listener_thread;
+			if( pthread_create( &listener_thread , NULL ,  listener , NULL) < 0)
 			{
 			    perror("could not create thread");
 			    return 1;
-			}*/
+			}
 		}
 
 		if(packetfromserver.type==LO_NAK)		
 			 printf("LOGIN FAILED\n");
 
 
-
 		
+	
 		
 	
 	}
@@ -187,13 +186,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		}
 
 
-		//Receive a reply from the server
-		struct lab3message packetfromserver;
-		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
-		{
-		    puts("recv failed");
-		}
-		strcpy(curr_sess,NULL);
+		strcpy(curr_sess,"");
 
 
 
@@ -214,21 +207,6 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		}
 
 
-		//Receive a reply from the server
-		struct lab3message packetfromserver;
-		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
-		{
-		    puts("recv failed");
-		}
-
-		if(packetfromserver.type==JN_ACK){
-			printf("JOIN SESSION SECCESS\n");
-			strcpy(curr_sess,arg1);
-		}		
-			 
-		if(packetfromserver.type==JN_NAK)		
-			 printf("JOIN SESSION FAILED\n");
-
 
 	}
 	else if (!strcmp(command,"/leavesession"))
@@ -245,16 +223,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		{
 		    puts("Send failed");
 		}
-
-
-		//Receive a reply from the server
-		struct lab3message packetfromserver;
-		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
-		{
-		    puts("recv failed");
-		}
-		strcpy(curr_sess,NULL);
-
+		strcpy(curr_sess,"");
 
 	}
 	else if (!strcmp(command,"/createsession"))
@@ -272,21 +241,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		    puts("Send failed");
 		}
 
-
-		//Receive a reply from the server
-		struct lab3message packetfromserver;
-		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
-		{
-		    puts("recv failed");
-		}
-
-		if(packetfromserver.type==NS_ACK)		
-		{
-			printf("CREATE SESSION SECCESS\n");
-			strcpy(curr_sess,arg1);
-		}		
-		
-
+	
 
 
 
@@ -307,16 +262,6 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		}
 
 
-		//Receive a reply from the server
-		struct lab3message packetfromserver;
-		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
-		{
-		    puts("recv failed");
-		}
-
-		if(packetfromserver.type==QU_ACK)		
-			 printf("GOT LIST, PRINTING\n");
-
 	}
 	else if (!strcmp(command,"/quit"))
 	{
@@ -335,13 +280,6 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		}
 
 
-		//Receive a reply from the server
-		struct lab3message packetfromserver;
-		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
-		{
-		    puts("recv failed");
-		}
-
 
 
 
@@ -356,6 +294,8 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		strcat (new_buffer, ":");
 		strcat (new_buffer, curr_sess);
 		strcpy(packettoserver.source, new_buffer);
+
+		
 		//strcpy(packettoserver.data , client_pw);
 		packettoserver.size = sizeof(packettoserver.data);
 		
@@ -367,13 +307,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		}
 
 
-		//Receive a reply from the server
-		struct lab3message packetfromserver;
-		if( recv(sock , &packetfromserver , sizeof(packetfromserver) , 0) < 0)
-		{
-		    puts("recv failed");
-		}
-
+		
 
 
 
@@ -401,13 +335,39 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 
 
 
-/*
-void listener(void *socket_desc){
-		int sock = *(int*)socket_desc;
-		struct lab3message packetFromServer;
-		 while( (read_size = recv(sock , &packetFromServer , sizeof(packetFromServer) , 0)) > 0 )
+
+void *listener(){
+
+		
+		int read_size;
+		struct lab3message packetfromserver;
+		 while( (read_size = recv(sock , &packetfromserver , sizeof(packetfromserver) , 0)) > 0 )
 		{
+
+			//printf("packet received : %d\n" , packetfromserver.type);
+
+
+			if(packetfromserver.type==JN_ACK){
+			printf("JOIN SESSION SECCESS\n");
+			strcpy(curr_sess,packetfromserver.data);
+			}		
+			 
+			if(packetfromserver.type==JN_NAK)		
+			 printf("JOIN SESSION FAILED\n");
+			
+			if(packetfromserver.type==QU_ACK)		
+			 printf("GOT LIST, PRINTING\n");
+
+
+			if(packetfromserver.type==NS_ACK)		
+			{
+			printf("CREATE SESSION SECCESS\n");
+			strcpy(curr_sess,packetfromserver.data);
+			}	
+
 		}
 
-}*/
 
+
+
+}
