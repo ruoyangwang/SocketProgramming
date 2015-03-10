@@ -27,11 +27,9 @@ int main(int argc , char *argv[])
 
     
     struct sockaddr_in server;
-    char message[1000], message_tmp[1000] , server_reply[2000], command[2000], ip_addr[100], buffer[1000];
+   
+     char message[1000], message_tmp[1000] , server_reply[2000], command[2000], ip_addr[100], buffer[1000];
     char arg1[1000], arg2[1000], arg3[1000], arg4[1000];
-
-	
-
 
 
 
@@ -40,14 +38,23 @@ int main(int argc , char *argv[])
     //keep communicating with server
     while(1)
     {
-
+	memset(message,0,sizeof message);
+	memset(arg1,0,sizeof arg1);
+	int i = 0;
         printf("Enter command: ");
    	fgets(message, sizeof(message),stdin);
-	strncpy(message_tmp, message, sizeof(message));
+
+	for(i = 0;i <strlen(message)-1;i++){
+		message_tmp[i]=message[i];
+	}
+	message_tmp[i]='\0';
+
+
 	char* token = strtok(message_tmp, " ");
+
 	int counter = 0;
 	while (token != NULL){
-		//printf( "%s \n",token);
+		printf( "%s \n",token);
 		if (counter ==0)
 			strcpy(command,token);
 		if (counter ==1)
@@ -62,7 +69,6 @@ int main(int argc , char *argv[])
 		counter++;
 	}
 	counter = 0;
-
 
 
 
@@ -295,9 +301,9 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		strcat (new_buffer, ":");
 		strcat (new_buffer, curr_sess);
 		strcpy(packettoserver.source, new_buffer);
-
+		printf("%s\n",new_buffer);
 		
-		//strcpy(packettoserver.data , client_pw);
+		strcpy(packettoserver.data , message);
 		packettoserver.size = sizeof(packettoserver.data);
 		
 
