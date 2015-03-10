@@ -37,7 +37,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8000 );
+    server.sin_port = htons( 8001 );
 
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -145,7 +145,7 @@ void *connection_handler(void *socket_desc)
 				if(create_new_session(packetFromClient.data, packetFromClient.source, sock)){
 					printf("the client just start a new session \n");
 					packetToClient.type = NS_ACK;
-					strcpy(packetToClient.data,"new session created");
+					strcpy(packetToClient.data,packetFromClient.data);
 					printf("packetfromServer type? %d \n",packetToClient.type);
 					write(sock , &packetToClient , sizeof(packetToClient));	
 				}
@@ -197,7 +197,8 @@ bool send_message(const char*message,  char *user){
 	char sName[50];
 	char info[MAX_NAME];
 	int i = 0;
-	//strcpy(info, user);
+	bool broadcast = false;
+	strcpy(info, user);
 	printf("print first info: |%s|  , and the message? : |%s| \n",user, message);
 	session * temp =Shead;
 	
@@ -220,17 +221,24 @@ bool send_message(const char*message,  char *user){
 			userinfo *head = temp->head;
 			while(head!= NULL){
 				if(strcmp(head->userName, uName)){
+					printf("found the other client, now broadcast  |%s|  \n", head->userName);
 					struct lab3message packetToClient;
 					packetToClient.type = MESSAGE;
 					strcpy(packetToClient.data,message);
+					printf("what's the client's socket? %d\n",head-> sock);
 					write(head-> sock , &packetToClient , sizeof(packetToClient));
+					broadcast = true;
 				}
 				head=head->next;
 			}
-		
+			
 		}
 		temp= temp->next;
 	}
+	
+	if(broadcast)
+		return true;
+	return false;
 
 }
 
@@ -285,18 +293,39 @@ bool Read_login(const char*username, const char *passwd){
 
 
 bool check_session_exist(const char* sessionName,  const char *userName, int sock){
+	printf("what's the required session name:   |%s| \n", sessionName);
 	session * temp =Shead;
 	while(temp!=NULL){
+		printf("current session name on iteration   |%s| \n", temp->sessionName);
 		if(strcmp(temp->sessionName,sessionName)==0){
+			printf("found the session\n");
+			
 			userinfo *head = temp->head;
+			if(head ==NULL){
+				userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
+				strcpy(newuser->userName,userName);
+				newuser->sock = sock;
+				head = newuser;
+				temp->head = newuser;
+				return true;
+			
+			}
+			
 			userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
 			strcpy(newuser->userName,userName);
 			newuser->sock = sock;
 			
-			while(head->next!=NULL)
+			while(head->next!=NULL){
 				head = head->next;
-			head = newuser;
-
+			}
+			head->next = newuser;
+			
+			userinfo * usertemp = temp->head;
+			while(usertemp!=NULL){
+				printf("the current user on this session:  |%s| \n", usertemp->userName);
+				usertemp = usertemp->next;
+			
+			}
 			return true;
 		}
 		temp = temp->next;
@@ -311,15 +340,16 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 	printf("now create new session, what's the userName:  |%s| , what's session name: |%s| \n",userName, sessionName);
 	session * temp =Shead;
 	if(temp == NULL){
+		printf("head is NULL now: \n");
 		session *newsession = (session *)malloc(sizeof(session));
 		strcpy(newsession->sessionName,sessionName);
 		temp = newsession;
-		
+		Shead = temp;
 		userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
 		strcpy(newuser->userName,userName);
 		newuser->sock = sock;
 		newsession->head = newuser;
-		
+		printf("session right now? |%s|  |%s|\n",temp->sessionName,Shead->sessionName);
 		return true;
 	}
 	
@@ -338,6 +368,8 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 	newuser->sock = sock;
 	newsession->head = newuser;
 	
+	
+	printf("session right now? |%s|\n",Shead->sessionName);
 	return true;
 	
 
