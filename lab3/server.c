@@ -126,7 +126,8 @@ void *connection_handler(void *socket_desc)
 				if(check_session_exist(packetFromClient.data, packetFromClient.source, sock)){
 					printf("successfully insert this client into the according session \n");
 					packetToClient.type = JN_ACK;
-					 write(sock , &packetToClient , sizeof(packetToClient));
+					strcpy(packetToClient.data,packetFromClient.data);
+					write(sock , &packetToClient , sizeof(packetToClient));
 				}
 				else{
 					printf("cannot find the session, please create session first \n");
@@ -134,21 +135,28 @@ void *connection_handler(void *socket_desc)
 					 write(sock , &packetToClient , sizeof(packetToClient));
 				}
 				break;
+				
 			case LEAVE_SESS:					//case for leaving new session
 				;
 				break;
+				
+				
 			case NEW_SESS:					//case for creating new session
 				if(create_new_session(packetFromClient.data, packetFromClient.source, sock)){
 					printf("the client just start a new session \n");
-					packetToClient.type = JN_ACK;
+					packetToClient.type = NS_ACK;
+					strcpy(packetToClient.data,"new session created");
+					printf("packetfromServer type? %d \n",packetToClient.type);
 					write(sock , &packetToClient , sizeof(packetToClient));	
 				}
 				else{
 					printf("cannot create session, session might already exist \n");
-					packetToClient.type = JN_NAK;
-					write(sock , &packetToClient , sizeof(packetToClient));	
+					//packetToClient.type = NS_NAK;
+					//write(sock , &packetToClient , sizeof(packetToClient));	
 				}
 				break;
+				
+				
 			case MESSAGE:					//case for sending message
 				if(send_message(packetFromClient.data, packetFromClient.source)){
 					printf("message successfully broadcasted \n");				
@@ -156,6 +164,8 @@ void *connection_handler(void *socket_desc)
 				else
 					printf("cannot find the session or user not in the session \n");		
 				break;
+				
+				
 			case QUERY:					//case for getting list
 				;
 				break;
@@ -169,7 +179,7 @@ void *connection_handler(void *socket_desc)
 		
 		}
         //Send the message back to client
-        write(sock , &packetToClient , sizeof(packetToClient));
+        //write(sock , &packetToClient , sizeof(packetToClient));
     }
 
    
@@ -188,7 +198,7 @@ bool send_message(const char*message,  char *user){
 	char info[MAX_NAME];
 	int i = 0;
 	//strcpy(info, user);
-	printf("print first info: %s  , and the message? : %s \n",user, message);
+	printf("print first info: |%s|  , and the message? : |%s| \n",user, message);
 	session * temp =Shead;
 	
 	token = strtok(info, ":");
@@ -298,6 +308,7 @@ bool check_session_exist(const char* sessionName,  const char *userName, int soc
 
 
 bool create_new_session(const char* sessionName,  const char *userName, int sock){
+	printf("now create new session, what's the userName:  |%s| , what's session name: |%s| \n",userName, sessionName);
 	session * temp =Shead;
 	if(temp == NULL){
 		session *newsession = (session *)malloc(sizeof(session));
