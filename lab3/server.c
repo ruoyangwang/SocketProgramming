@@ -9,9 +9,11 @@
 #include "client.h"
 
 void *connection_handler(void *);
-int Read_login(const char*username, const char *passwd);
+bool Read_login(const char*username, const char *passwd);
 bool check_session_exist(const char* sessionName, const char *userName, int sock );
 bool create_new_session(const char* sessionName,  const char *userName, int sock);
+bool send_message(const char*message, char *user);
+
 void add_node();
 
 static session *Shead = NULL;
@@ -109,13 +111,15 @@ void *connection_handler(void *socket_desc)
 			
 			case LOGIN:					//case for handling login
 				printf("login section, mock to send back ACK\n");
-				packetToClient.type = LO_ACK;
-				write(sock , &packetToClient , sizeof(packetToClient));
-				/*if(Read_login(packetFromClient.source, packetFromClient.data)){
-					;
+				
+				
+				if(Read_login(packetFromClient.source, packetFromClient.data)){
+					packetToClient.type = LO_ACK;
 				}
 				else
-					;*/
+					packetToClient.type= LO_NAK;
+					
+				write(sock , &packetToClient , sizeof(packetToClient));
 					break;
 				
 			case JOIN:					//case for handling join session
@@ -146,7 +150,11 @@ void *connection_handler(void *socket_desc)
 				}
 				break;
 			case MESSAGE:					//case for sending message
-				;
+				if(send_message(packetFromClient.data, packetFromClient.source)){
+					printf("message successfully broadcasted \n");				
+				}
+				else
+					printf("cannot find the session or user not in the session \n");		
 				break;
 			case QUERY:					//case for getting list
 				;
@@ -173,22 +181,94 @@ void *connection_handler(void *socket_desc)
 
 
 
-int Read_login(const char*username, const char *passwd){
+bool send_message(const char*message,  char *user){
+	char *token;
+	char uName[50];
+	char sName[50];
+	char info[MAX_NAME];
+	int i = 0;
+	//strcpy(info, user);
+	printf("print first info: %s  , and the message? : %s \n",user, message);
+	session * temp =Shead;
+	
+	token = strtok(info, ":");
+	strcpy(uName, token);
+   	printf("print userName: %s , leftover string: %s\n", token,info);
+	   /* walk through other tokens */
+	for(i=0;i<1;i++) 
+	{
+		  //printf( " %s\n", token );
+		
+		  token = strtok(NULL, ":");
+		  strcpy(sName,token);
+	}
+	
+	printf("session name :  %s  \n",sName);
+	
+	while(temp!=NULL){
+		if(strcmp(temp->sessionName,sName)==0){
+			userinfo *head = temp->head;
+			while(head!= NULL){
+				if(strcmp(head->userName, uName)){
+					struct lab3message packetToClient;
+					packetToClient.type = MESSAGE;
+					strcpy(packetToClient.data,message);
+					write(head-> sock , &packetToClient , sizeof(packetToClient));
+				}
+				head=head->next;
+			}
+		
+		}
+		temp= temp->next;
+	}
+
+}
+
+
+
+bool Read_login(const char*username, const char *passwd){
+	printf("inside login, username and passwd?  |%s|   |%s|\n",username, passwd);
 	FILE* fp;
 	fp = fopen("login.txt", "r");
 	char * line = NULL;
     size_t len = 0;
     size_t read;
     
+    
 	while ((read = getline(&line, &len, fp)) != -1) {
-		    ;
+		   char *token;
+		   char uName[50];
+		   char password[50];
+		   char passwd[50];
+		   int i = 0;
+		   //printf("current line for read: %s \n");
+		   
+		   token = strtok(line, ":");
+		   strcpy(uName, token);
+		   for(i=0;i<1;i++) {
+
+				  token = strtok(NULL, ":");
+				  strcpy(password,token);
+			}
+			
+			
+			for(i = 0; i<strlen(password);i++){
+				passwd[i]=password[i];
+			}	
+			//printf("the username and password after tok? :  |%s|    |%s|\n",uName, passwd);
+		   if(strcmp(username,uName)==0){
+		   		//printf("find the same username \n");
+		   		if(strcmp(passwd,password)==0){
+		   			//printf("find the same password, return true \n");
+		   			return true;
+		   		
+		   		}
+		   		else
+		   			return false;
+		   
+		   }
+		   
     }
-
-
-
-
-
-
 
 }
 
