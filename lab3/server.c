@@ -13,9 +13,14 @@ bool Read_login(const char*username, const char *passwd);
 bool check_session_exist(const char* sessionName, const char *userName, int sock );
 bool create_new_session(const char* sessionName,  const char *userName, int sock);
 bool send_message(const char*message, char *user);
+bool client_leave(const char* sessionName,  const char *userName);
+bool client_exit(const char *userName);
+void get_list(int sock);
 
 void add_node();
 
+
+static userinfo * CurrClient = NULL;
 static session *Shead = NULL;
 
 int main(int argc , char *argv[])
@@ -64,12 +69,12 @@ int main(int argc , char *argv[])
         if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
         {
             perror("could not create thread");
-            return 1;
         }
 
         //Now join the thread , so that we dont terminate before the thread
         //pthread_join( sniffer_thread , NULL);
-        puts("Handler assigned");
+        else 
+        	puts("Handler assigned");
     }
 
     if (new_socket<0)
@@ -89,6 +94,7 @@ void *connection_handler(void *socket_desc)
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
     int read_size;
+    bool exit = false;
     char *message , client_message[2000];
     struct lab3message packetFromClient;
 	struct lab3message packetToClient;
@@ -106,9 +112,21 @@ void *connection_handler(void *socket_desc)
 		}
 		
 		switch(packetFromClient.type){
+		
 			case EXIT:						//case for handling exit
+				if(client_exit(packetFromClient.source)){
+					printf("Client has some sessions before, now can exit\n");
+					
+				}
+				else{
+					printf("Client doesn't have any session, exit directly \n");
 				
-			
+				}
+				exit = true;		//set the flag to break while loop to exit
+				break;
+				
+				
+				
 			case LOGIN:					//case for handling login
 				printf("login section, mock to send back ACK\n");
 				
@@ -121,6 +139,7 @@ void *connection_handler(void *socket_desc)
 					
 				write(sock , &packetToClient , sizeof(packetToClient));
 					break;
+				
 				
 			case JOIN:					//case for handling join session
 				if(check_session_exist(packetFromClient.data, packetFromClient.source, sock)){
@@ -136,9 +155,18 @@ void *connection_handler(void *socket_desc)
 				}
 				break;
 				
+				
+				
 			case LEAVE_SESS:					//case for leaving new session
-				;
+				if(client_leave(packetFromClient.data, packetFromClient.source)){
+					printf("client successfully left session \n");
+				
+				}
+				else{
+					printf("cannot find the client in the session \n");				
+				}
 				break;
+				
 				
 				
 			case NEW_SESS:					//case for creating new session
@@ -157,6 +185,7 @@ void *connection_handler(void *socket_desc)
 				break;
 				
 				
+				
 			case MESSAGE:					//case for sending message
 				if(send_message(packetFromClient.data, packetFromClient.source)){
 					printf("message successfully broadcasted \n");				
@@ -165,9 +194,10 @@ void *connection_handler(void *socket_desc)
 					printf("cannot find the session or user not in the session \n");		
 				break;
 				
+			
 				
 			case QUERY:					//case for getting list
-				;
+			    get_list(sock);
 				break;
 			
 		
@@ -178,8 +208,9 @@ void *connection_handler(void *socket_desc)
 		
 		
 		}
-        //Send the message back to client
-        //write(sock , &packetToClient , sizeof(packetToClient));
+		
+		if(exit)
+			break;
     }
 
    
@@ -251,6 +282,17 @@ bool Read_login(const char*username, const char *passwd){
 	char * line = NULL;
     size_t len = 0;
     size_t read;
+    
+    /*first insert this client name into client node ------------*/
+    userinfo * head = CurrClient;
+    while(head->next!=NULL)
+		head = head->next;
+	userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
+	strcpy(newuser->userName, username);
+	newuser->sock = -1;
+	head->next = newuser;			//append newuser to the end of linkelist
+	//------------------------------------------------------------
+    
     
     
 	while ((read = getline(&line, &len, fp)) != -1) {
@@ -353,7 +395,7 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 		return true;
 	}
 	
-	while(temp->next!=NULL){
+	while(temp!=NULL){
 		if(strcmp(temp->sessionName,sessionName)==0)
 				return false;
 		temp = temp->next;
@@ -376,6 +418,165 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 }
 
 
+bool client_leave(const char* sessionName,  const char *userName){
+	session * temp =Shead;
+	if(temp == NULL){
+		printf("head is NULL now: \n");
+		return false;
+	}
+	while(temp!=NULL){
+		if(strcmp(temp->sessionName,sessionName)==0)
+		{
+			userinfo *head = temp->head;
+			userinfo *prev = NULL;
+			userinfo *next = head->next;
+			int count = 0;
+			while(head!= NULL){
+				if(strcmp(head->userName, userName)==0){
+					printf("found the client, now delete this node from linkedlist \n");
+					if(count ==0){		//indicate the client to delete is the head
+						printf("I am on the first node to be deleted \n");
+						temp->head = NULL;
+						temp->head = next;
+						free(head);
+						//return true;
+					}
+					
+					else{				//case for deleting the node in middle or the end
+						prev->next = head->next;
+						free(head);
+						
+					}
+					
+					//free(socket_desc);
+					return true;
+					
+				}
+				prev = NULL;			//reset the previous node pointer
+				prev = head;			//assign the old node address to "prev"
+				count ++;				//counter keeps track of how many node has went through
+				head = head->next;		//move to the next node
+			}
+			return false;
+		
+		
+		}
+		temp = temp->next;
+	}
+}
 
 
+bool client_exit(const char *userName){
+		session * temp =Shead;
+		userinfo * Chead = CurrClient;
+		bool has = false;		//indicate whether found this client in any session
+		
+		userinfo *head = Chead;
+		userinfo *prev = NULL;
+		userinfo *next = Chead->next;
+		
+		/*first delete client from the Client linkedlist -----------*/
+		while(head !=NULL){
+			int count = 0;
+			next = head->next;
+			if(strcmp(head->userName, userName)==0){
+					if(count ==0){
+						printf("Find the quitting client, it's at the head of CurrClient   %s \n",head->userName);
+						//Chead->head = NULL;
+						CurrClient = next;
+						free(head);
+					}
+					else{				//case for deleting the node in middle or the end
+							prev->next = head->next;
+							head->next = NULL;
+							free(head);
+						
+						}
+					break;			//deleted it, now break
+
+			}
+			prev = NULL;			//reset the previous node pointer
+			prev = head;			//assign the old node address to "prev"
+			count ++;				//counter keeps track of how many node has went through
+			head = head->next;		//move to the next node
+
+		}
+		head = NULL;prev = NULL; next = NULL;
+		//----------------------------------------------------------
+		
+		
+		if(temp == NULL){
+			printf("head NULL, so client not in any session, can exit directly \n");
+			return false;
+		}
+		
+		while(temp!=NULL){
+			int count = 0;
+			head = temp->head;
+			prev = NULL;
+			next = head->next;
+			
+			while(head!= NULL){
+				next = head->next;
+				if(strcmp(head->userName, userName)==0){
+					if(count ==0){
+						printf("Find this exiting client in the head of this session   %s \n",temp->sessionName);
+						temp->head = NULL;
+						temp->head = next;
+						free(head);
+					}
+					else{				//case for deleting the node in middle or the end
+							prev->next = head->next;
+							head->next = NULL;
+							free(head);
+						
+						}
+					has = true;			//found this client in some session(s)
+					break;				//same client should not appears twice in the same session, so simply break
+				}
+				
+				prev = NULL;			//reset the previous node pointer
+				prev = head;			//assign the old node address to "prev"
+				count ++;				//counter keeps track of how many node has went through
+				head = head->next;		//move to the next node
+			
+			}
+			temp = temp->next;
+		}
+		
+		if(has)
+			return true;
+			
+		return false;
+
+}
+
+
+void get_list(int sock){
+	struct lab3message packetToClient;
+	packetToClient.type = QU_ACK;
+	
+	
+	session * temp =Shead;
+	userinfo * Chead = CurrClient;
+	while(temp!= NULL){				//copy session names into the first chunk of data
+		strcat(packetToClient.data,temp->sessionName);
+		strcat(packetToClient.data,":");
+		
+		temp = temp->next;
+	}
+	strcat(packetToClient.data,"-");
+	
+	
+	while(Chead!=NULL){
+		strcat(packetToClient.data,Chead->userName);
+		strcat(packetToClient.data,":");
+		Chead = Chead->next;
+	}
+	//now cat client names
+	
+	
+	
+	write(sock , &packetToClient , sizeof(packetToClient));
+}
 

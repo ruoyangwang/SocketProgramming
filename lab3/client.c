@@ -303,8 +303,8 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		
 		strcpy(packettoserver.data , message);
 		packettoserver.size = sizeof(packettoserver.data);
+		 printf("%s\n", packettoserver.data);
 		
-
 		//Send some data
 		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
 		{
@@ -369,6 +369,15 @@ void *listener(){
 			printf("CREATE SESSION SECCESS\n");
 			strcpy(curr_sess,packetfromserver.data);
 			}	
+			
+			
+			if(packetfromserver.type==MESSAGE)		
+			{
+			printf("%s\n",packetfromserver.data );
+			
+			}	
+			
+			
 
 		}
 
