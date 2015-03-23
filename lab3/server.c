@@ -42,7 +42,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8000 );
+    server.sin_port = htons( 8001 );
 
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -488,6 +488,7 @@ bool client_leave(const char* sessionName,  const char *userName){
 
 
 bool client_exit(const char *userName){
+		printf("userName for quit????????   %s\n",userName);
 		session * temp =Shead;
 		userinfo * Chead = CurrClient;
 		bool has = false;		//indicate whether found this client in any session
@@ -495,10 +496,11 @@ bool client_exit(const char *userName){
 		userinfo *head = Chead;
 		userinfo *prev = NULL;
 		userinfo *next = Chead->next;
-		
+		//printf("breakpoint 1\n");
+		int count = 0;
 		/*first delete client from the Client linkedlist -----------*/
 		while(head !=NULL){
-			int count = 0;
+			
 			next = head->next;
 			if(strcmp(head->userName, userName)==0){
 					if(count ==0){
@@ -526,15 +528,17 @@ bool client_exit(const char *userName){
 		}
 		head = NULL;prev = NULL; next = NULL;
 		//----------------------------------------------------------
-		
+		//printf("breakpoint 2\n");
 		
 		if(temp == NULL){
 			printf("head NULL, so client not in any session, can exit directly \n");
 			return false;
 		}
 		
+		count = 0;
 		while(temp!=NULL){
-			int count = 0;
+			printf("---------  %s \n",temp->sessionName);
+			
 			head = temp->head;
 			prev = NULL;
 			next = head->next;
@@ -546,6 +550,7 @@ bool client_exit(const char *userName){
 						printf("Find this exiting client in the head of this session   %s \n",temp->sessionName);
 						temp->head = NULL;
 						temp->head = next;
+						printf("---------------------------------\n");
 						free(head);
 					}
 					else{				//case for deleting the node in middle or the end
@@ -566,11 +571,52 @@ bool client_exit(const char *userName){
 			}
 			temp = temp->next;
 		}
-		
+		//printf("breakpoint 3\n");
 		
 		//this is for testing -----------------------------------------------------------------
 		temp =Shead;
 		Chead = temp->head;
+		session * Sprev =NULL ;
+		count = 0;
+		
+		
+		while(temp!=NULL){
+			
+			if(temp->head !=NULL){
+				printf("HEAD NOT NULL\n",temp->head->userName);
+				if(count ==0){
+					Shead = temp;
+					count=1;
+					Sprev = Shead;
+					temp=temp->next;
+					continue;
+				}
+				Sprev->next = temp;
+				Sprev = temp;
+				
+			}
+			
+			
+			/*printf("FINAL session check   %s \n",temp->sessionName);
+			while(Chead!=NULL){
+				printf("FINAL client check in the session  %s  %s \n",Chead->userName,temp->sessionName);
+				Chead=Chead->next;
+			}
+			//count++;*/
+			temp=temp->next;
+		}
+		//printf("breakpoint 4\n");
+		if(count==0)
+			Shead = NULL;
+		else
+			Sprev->next = NULL;
+		
+		/*if(Shead!=NULL){	
+			temp =Shead;
+			Chead = temp->head;
+		}
+		
+		printf("breakpoint 5\n");
 		
 		while(temp!=NULL){
 			printf("FINAL session check   %s \n",temp->sessionName);
@@ -578,8 +624,12 @@ bool client_exit(const char *userName){
 				printf("FINAL client check in the session  %s  %s \n",Chead->userName,temp->sessionName);
 				Chead=Chead->next;
 			}
+			//count++;
 			temp=temp->next;
-		}
+		
+		
+		}*/
+		//printf("breakpoint 5\n");
 		//this is for testing -----------------------------------------------------------------
 		if(has)
 			return true;
