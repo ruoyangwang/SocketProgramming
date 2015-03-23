@@ -28,7 +28,7 @@ int main(int argc , char *argv[])
     
     struct sockaddr_in server;
    
-     char message[1000], message_tmp[1000] , server_reply[2000], command[2000], ip_addr[100], buffer[1000];
+     char message[1000], message_tmp[1000], msg_without_command[1000] , server_reply[2000], command[2000], ip_addr[100], buffer[1000];
     char arg1[1000], arg2[1000], arg3[1000], arg4[1000];
 
 
@@ -50,6 +50,11 @@ int main(int argc , char *argv[])
 	message_tmp[i]='\0';
 
 
+    for(i = 0;i <strlen(message)-1;i++){
+        msg_without_command[i]=message[i];
+    }
+    msg_without_command[i]='\0';
+        
 	char* token = strtok(message_tmp, " ");
 
 	int counter = 0;
@@ -155,7 +160,7 @@ int main(int argc , char *argv[])
 	{
 
 
-		command_handler(command, arg1, arg2, arg3, arg4, message_tmp);
+		command_handler(command, arg1, arg2, arg3, arg4, message_tmp, msg_without_command);
 
 		
 	}
@@ -173,7 +178,7 @@ int main(int argc , char *argv[])
 
 
 
-void command_handler(char command[2000], char arg1[2000], char arg2[2000], char arg3[2000], char arg4[2000], char message[2000]){
+void command_handler(char command[2000], char arg1[2000], char arg2[2000], char arg3[2000], char arg4[2000], char message[2000], char msg_without_command[2000]){
 
 	
 	if (!strcmp(command,"/logout"))
@@ -258,7 +263,10 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		strcpy(packettoserver.source, client_id);
 		//strcpy(packettoserver.data , arg1);
 		packettoserver.size = sizeof(packettoserver.data);
-		
+        
+              
+        
+        
 
 		//Send some data
 		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
@@ -284,7 +292,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		    puts("Send failed");
 		}
 
-
+        exit(0);
 
 
 
@@ -301,7 +309,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		strcpy(packettoserver.source, new_buffer);
 		
 		
-		strcpy(packettoserver.data , message);
+		strcpy(packettoserver.data , msg_without_command);
 		packettoserver.size = sizeof(packettoserver.data);
 		 printf("%s\n", packettoserver.data);
 		
@@ -312,7 +320,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		}
 
 
-		
+        
 
 
 
@@ -361,8 +369,51 @@ void *listener(){
 			 printf("JOIN SESSION FAILED\n");
 			
 			if(packetfromserver.type==QU_ACK)		
-			 printf("GOT LIST, PRINTING\n");
-
+			 {
+			 	printf("GOT LIST, PRINTING\n");
+			 
+        
+				char test_list[2000], list_of_sesssion[2000], list_of_clients[2000];
+				//strcpy(test_list , "SessionName1:SessionName2:SessionName3-UserName1:UserName2:UserName3\n");
+				//printf ("%s",test_list);
+				char* token = strtok(packetfromserver.data, "-");
+				
+				int counter = 0;
+				while (token != NULL){
+				    //printf( "%s \n",token);
+				    if (counter ==0)
+				        strcpy(list_of_sesssion,token);
+				    if (counter ==1)
+				        strcpy(list_of_clients,token);
+				    token = strtok (NULL, " ");
+				    counter++;
+				}
+				counter = 0;
+				
+				
+				int i=0;
+				while (list_of_sesssion[i] != '\0'){
+				    if (list_of_sesssion[i] == ':') {
+				        list_of_sesssion[i] = '\n';
+				    } else {
+				        //putchar(list_of_sesssion[i]);
+				    }
+				    i++;
+				}
+				i=0;
+				while (list_of_clients[i] != '\0'){
+				    if (list_of_clients[i] == ':') {
+				        list_of_clients[i] = '\n';
+				    } else {
+				        //putchar(list_of_sesssion[i]);
+				    }
+				    i++;
+				}
+				
+				printf ("----------------LIST OF SESSIONS----------------\n%s\n",list_of_sesssion);
+				printf ("----------------LIST OF CLIENTS----------------\n%s\n",list_of_clients);
+				
+				}
 
 			if(packetfromserver.type==NS_ACK)		
 			{

@@ -42,7 +42,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8001 );
+    server.sin_port = htons( 8000 );
 
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -197,6 +197,7 @@ void *connection_handler(void *socket_desc)
 			
 				
 			case QUERY:					//case for getting list
+				printf("get user LIST request! \n");
 			    get_list(sock);
 				break;
 			
@@ -285,12 +286,25 @@ bool Read_login(const char*username, const char *passwd){
     
     /*first insert this client name into client node ------------*/
     userinfo * head = CurrClient;
-    while(head->next!=NULL)
-		head = head->next;
-	userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
-	strcpy(newuser->userName, username);
-	newuser->sock = -1;
-	head->next = newuser;			//append newuser to the end of linkelist
+    printf("first after assignment of head\n");
+    if(head==NULL){
+		userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
+		strcpy(newuser->userName, username);
+		newuser->sock = -1;
+		head = newuser;
+		CurrClient = head;
+		printf("LOGIN: first client!  %s  \n",CurrClient->userName);
+	}
+   	else{
+		while(head->next!=NULL)
+			head = head->next;
+		printf("check linkedlist inside login\n");
+		userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
+		strcpy(newuser->userName, username);
+		newuser->sock = -1;
+		head->next = newuser;
+	}
+				//append newuser to the end of linkelist
 	//------------------------------------------------------------
     
     
@@ -301,7 +315,7 @@ bool Read_login(const char*username, const char *passwd){
 		   char password[50];
 		   char passwd[50];
 		   int i = 0;
-		   //printf("current line for read: %s \n");
+		   printf("current line for read: %s \n", line);
 		   
 		   token = strtok(line, ":");
 		   strcpy(uName, token);
@@ -315,11 +329,11 @@ bool Read_login(const char*username, const char *passwd){
 			for(i = 0; i<strlen(password);i++){
 				passwd[i]=password[i];
 			}	
-			//printf("the username and password after tok? :  |%s|    |%s|\n",uName, passwd);
+			printf("the username and password after tok? :  |%s|    |%s|\n",uName, passwd);
 		   if(strcmp(username,uName)==0){
-		   		//printf("find the same username \n");
+		   		printf("find the same username \n");
 		   		if(strcmp(passwd,password)==0){
-		   			//printf("find the same password, return true \n");
+		   			printf("find the same password, return true \n");
 		   			return true;
 		   		
 		   		}
@@ -395,23 +409,31 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 		return true;
 	}
 	
+	session * prev = NULL;
 	while(temp!=NULL){
+		prev = temp;
 		if(strcmp(temp->sessionName,sessionName)==0)
 				return false;
 		temp = temp->next;
 	}
 	
+	printf("head is not NULL, create another session: \n");
+	
+	
 	session *newsession = (session *)malloc(sizeof(session));
 	strcpy(newsession->sessionName,sessionName);
-	temp->next = newsession;
+	prev->next = newsession;
 		
 	userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
 	strcpy(newuser->userName,userName);
 	newuser->sock = sock;
 	newsession->head = newuser;
 	
-	
-	printf("session right now? |%s|\n",Shead->sessionName);
+	session * Atemp =Shead;
+	while(Atemp!=NULL){
+		printf("session right now? |%s|\n",Atemp->sessionName);
+		Atemp = Atemp->next;
+	}
 	return true;
 	
 
@@ -544,6 +566,18 @@ bool client_exit(const char *userName){
 			temp = temp->next;
 		}
 		
+		temp =Shead;
+		Chead = CurrClient;
+		while(temp!=NULL){
+			printf("FINAL session check   %s \n",temp->sessionName);
+			temp=temp->next;
+		}
+		
+		while(Chead!=NULL){
+			printf("FINAL client check   %s \n",Chead->userName);
+			Chead=Chead->next;
+		}
+		
 		if(has)
 			return true;
 			
@@ -553,15 +587,19 @@ bool client_exit(const char *userName){
 
 
 void get_list(int sock){
+
+	
 	struct lab3message packetToClient;
 	packetToClient.type = QU_ACK;
-	
+	memset(packetToClient.data, 0, sizeof packetToClient.data);
 	
 	session * temp =Shead;
 	userinfo * Chead = CurrClient;
 	while(temp!= NULL){				//copy session names into the first chunk of data
+		printf("LIST: print curr sessionName  %s \n",temp->sessionName);
 		strcat(packetToClient.data,temp->sessionName);
-		strcat(packetToClient.data,":");
+		if(temp->next!=NULL)
+			strcat(packetToClient.data,":");
 		
 		temp = temp->next;
 	}
@@ -569,12 +607,14 @@ void get_list(int sock){
 	
 	
 	while(Chead!=NULL){
+		printf("LIST: print curr userName  %s \n",Chead->userName);
 		strcat(packetToClient.data,Chead->userName);
-		strcat(packetToClient.data,":");
+		if(Chead->next!= NULL)
+			strcat(packetToClient.data,":");
 		Chead = Chead->next;
 	}
 	//now cat client names
-	
+	printf("print the list before send  %s \n",packetToClient.data);
 	
 	
 	write(sock , &packetToClient , sizeof(packetToClient));
