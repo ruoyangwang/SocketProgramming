@@ -187,6 +187,7 @@ void *connection_handler(void *socket_desc)
 				
 				
 			case MESSAGE:					//case for sending message
+				//printf("check message before call %s  \n",packetFromClient.source);
 				if(send_message(packetFromClient.data, packetFromClient.source)){
 					printf("message successfully broadcasted \n");				
 				}
@@ -240,8 +241,6 @@ bool send_message(const char*message,  char *user){
 	   /* walk through other tokens */
 	for(i=0;i<1;i++) 
 	{
-		  //printf( " %s\n", token );
-		
 		  token = strtok(NULL, ":");
 		  strcpy(sName,token);
 	}
@@ -506,7 +505,9 @@ bool client_exit(const char *userName){
 						printf("Find the quitting client, it's at the head of CurrClient   %s \n",head->userName);
 						//Chead->head = NULL;
 						CurrClient = next;
+						
 						free(head);
+						
 					}
 					else{				//case for deleting the node in middle or the end
 							prev->next = head->next;
@@ -566,18 +567,20 @@ bool client_exit(const char *userName){
 			temp = temp->next;
 		}
 		
+		
+		//this is for testing -----------------------------------------------------------------
 		temp =Shead;
-		Chead = CurrClient;
+		Chead = temp->head;
+		
 		while(temp!=NULL){
 			printf("FINAL session check   %s \n",temp->sessionName);
+			while(Chead!=NULL){
+				printf("FINAL client check in the session  %s  %s \n",Chead->userName,temp->sessionName);
+				Chead=Chead->next;
+			}
 			temp=temp->next;
 		}
-		
-		while(Chead!=NULL){
-			printf("FINAL client check   %s \n",Chead->userName);
-			Chead=Chead->next;
-		}
-		
+		//this is for testing -----------------------------------------------------------------
 		if(has)
 			return true;
 			
