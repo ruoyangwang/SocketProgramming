@@ -197,12 +197,15 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 
 
 		strcpy(curr_sess,"");
-
+        logged_in = 0;
 
 
 	}
 	else if (!strcmp(command,"/joinsession"))
 	{
+        
+        if (strlen(curr_sess) == 0)
+        {
 	    	struct lab3message packettoserver;
 		packettoserver.type = JOIN;
 		strcpy(packettoserver.source, client_id);
@@ -210,21 +213,33 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		packettoserver.size = sizeof(packettoserver.data);
 
 
-		//Send some data
-		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
-		{
-		    puts("Send failed");
-		}
-
+        //Send some data
+        if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+        {
+            puts("Send failed");
+        }
+        }
+        else
+        {
+            printf("PLESE LEAVE THE CURRENT SESSION FIRST\n");
+        }
 
 
 	}
 	else if (!strcmp(command,"/leavesession"))
 	{
-	    	struct lab3message packettoserver;
+        if (strlen(curr_sess) != 0)
+        {
+        struct lab3message packettoserver;
 		packettoserver.type = LEAVE_SESS;
-		strcpy(packettoserver.source, client_id);
-		//strcpy(packettoserver.data , arg1);
+        char new_buffer[2000];
+        strcpy (new_buffer, client_id);
+        strcat (new_buffer, ":");
+        strcat (new_buffer, curr_sess);
+            
+            //printf("%s\n", new_buffer);
+		strcpy(packettoserver.source, new_buffer);
+		strcpy(packettoserver.data , curr_sess);
 		packettoserver.size = sizeof(packettoserver.data);
 
 
@@ -234,6 +249,12 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		    puts("Send failed");
 		}
 		strcpy(curr_sess,"");
+        }
+        else
+        {
+            printf("PLESE JOIN A SESSION FIRST\n");
+        }
+
 
 	}
 	else if (!strcmp(command,"/createsession"))
@@ -278,7 +299,8 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 	}
 	else if (!strcmp(command,"/quit"))
 	{
-	    	struct lab3message packettoserver;
+        
+        struct lab3message packettoserver;
 		packettoserver.type = EXIT;
 		strcpy(packettoserver.source, client_id);
 		//strcpy(packettoserver.data , client_pw);
@@ -300,7 +322,10 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 	}
 	else
 	{
-	    	struct lab3message packettoserver;
+        
+        if (strlen(curr_sess) != 0)
+        {
+        struct lab3message packettoserver;
 		packettoserver.type = MESSAGE;
 		char new_buffer[2000];
 		strcpy (new_buffer, client_id);
@@ -311,7 +336,7 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		
 		strcpy(packettoserver.data , msg_without_command);
 		packettoserver.size = sizeof(packettoserver.data);
-		 printf("%s\n", packettoserver.data);
+		 //printf("%s\n", packettoserver.data);
 		
 		//Send some data
 		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
@@ -320,8 +345,11 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		}
 
 
-        
-
+        }
+        else
+        {
+            printf("PLESE JOIN A SESSION FIRST\n");
+        }
 
 
 
@@ -363,7 +391,7 @@ void *listener(){
 			if(packetfromserver.type==JN_ACK){
 			printf("JOIN SESSION SECCESS\n");
 			strcpy(curr_sess,packetfromserver.data);
-			}		
+			}
 			 
 			if(packetfromserver.type==JN_NAK)		
 			 printf("JOIN SESSION FAILED\n");
@@ -411,14 +439,18 @@ void *listener(){
 				}
 				
 				printf ("----------------LIST OF SESSIONS----------------\n%s\n",list_of_sesssion);
+                 
 				printf ("----------------LIST OF CLIENTS----------------\n%s\n",list_of_clients);
+                
 				
 				}
 
 			if(packetfromserver.type==NS_ACK)		
 			{
-			printf("CREATE SESSION SECCESS\n");
-			strcpy(curr_sess,packetfromserver.data);
+                puts("CREATE SESSION SECCESS");
+                printf ("Enter Command:");
+                strcpy(curr_sess,packetfromserver.data);
+                
 			}	
 			
 			
