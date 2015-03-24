@@ -232,13 +232,10 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
         {
         struct lab3message packettoserver;
 		packettoserver.type = LEAVE_SESS;
-        char new_buffer[2000];
-        strcpy (new_buffer, client_id);
-        strcat (new_buffer, ":");
-        strcat (new_buffer, curr_sess);
+        
             
             //printf("%s\n", new_buffer);
-		strcpy(packettoserver.source, new_buffer);
+		strcpy(packettoserver.source, client_id);
 		strcpy(packettoserver.data , curr_sess);
 		packettoserver.size = sizeof(packettoserver.data);
 
