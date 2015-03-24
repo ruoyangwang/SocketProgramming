@@ -399,6 +399,8 @@ void *listener(){
 			 
         
 				char test_list[2000], list_of_sesssion[2000], list_of_clients[2000];
+                 char null[2000]="null";
+                 
 				//strcpy(test_list , "SessionName1:SessionName2:SessionName3-UserName1:UserName2:UserName3\n");
 				//printf ("%s",test_list);
 				char* token = strtok(packetfromserver.data, "-");
@@ -434,8 +436,14 @@ void *listener(){
 				    }
 				    i++;
 				}
-				
-				printf ("----------------LIST OF SESSIONS----------------\n%s\n",list_of_sesssion);
+                 
+                 
+                 
+				if (!strcmp(list_of_sesssion, null))
+				printf ("----------------LIST OF SESSIONS----------------\n");
+                else
+                printf ("----------------LIST OF SESSIONS----------------\n%s\n",list_of_sesssion);
+                 
                  
 				printf ("----------------LIST OF CLIENTS----------------\n%s\n",list_of_clients);
                 
