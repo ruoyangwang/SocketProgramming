@@ -160,6 +160,32 @@ void *connection_handler(void *socket_desc)
 			case LEAVE_SESS:					//case for leaving new session
 				if(client_leave(packetFromClient.data, packetFromClient.source)){
 					printf("client successfully left session \n");
+					session * temp =Shead;
+					session * Sprev =NULL ;
+					int count = 0;
+					while(temp!=NULL){
+			
+						if(temp->head !=NULL){
+							printf("HEAD NOT NULL\n",temp->head->userName);
+							if(count ==0){
+								Shead = temp;
+								count=1;
+								Sprev = Shead;
+								temp=temp->next;
+								continue;
+							}
+							Sprev->next = temp;
+							Sprev = temp;
+				
+						}
+			
+						temp=temp->next;
+					}
+					//printf("breakpoint 4\n");
+					if(count==0)
+						Shead = NULL;
+					else
+						Sprev->next = NULL;
 				
 				}
 				else{
@@ -440,6 +466,7 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 
 
 bool client_leave(const char* sessionName,  const char *userName){
+	printf("LEAVESESSION   %s   %s \n",sessionName, userName);
 	session * temp =Shead;
 	if(temp == NULL){
 		printf("head is NULL now: \n");
@@ -484,6 +511,9 @@ bool client_leave(const char* sessionName,  const char *userName){
 		}
 		temp = temp->next;
 	}
+
+
+		
 }
 
 
@@ -648,6 +678,8 @@ void get_list(int sock){
 	
 	session * temp =Shead;
 	userinfo * Chead = CurrClient;
+	if(temp==NULL)
+		strcat(packetToClient.data,"null");
 	while(temp!= NULL){				//copy session names into the first chunk of data
 		printf("LIST: print curr sessionName  %s \n",temp->sessionName);
 		strcat(packetToClient.data,temp->sessionName);
