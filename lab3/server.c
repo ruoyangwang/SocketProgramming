@@ -376,6 +376,7 @@ bool Read_login(const char*username, const char *passwd){
 bool check_session_exist(const char* sessionName,  const char *userName, int sock){
 	printf("what's the required session name:   |%s| \n", sessionName);
 	session * temp =Shead;
+	bool test= false;
 	while(temp!=NULL){
 		printf("current session name on iteration   |%s| \n", temp->sessionName);
 		if(strcmp(temp->sessionName,sessionName)==0){
@@ -386,8 +387,9 @@ bool check_session_exist(const char* sessionName,  const char *userName, int soc
 				userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
 				strcpy(newuser->userName,userName);
 				newuser->sock = sock;
+				newuser->next = NULL;
 				head = newuser;
-				temp->head = newuser;
+				temp->head = head;
 				return true;
 			
 			}
@@ -395,15 +397,18 @@ bool check_session_exist(const char* sessionName,  const char *userName, int soc
 			userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
 			strcpy(newuser->userName,userName);
 			newuser->sock = sock;
-			
+			newuser->next = NULL;
 			while(head->next!=NULL){
 				head = head->next;
+				test = true;
 			}
 			head->next = newuser;
-			
+			printf("****************  %s   %s  \n",temp->head->userName, temp->head->next);
+			if(test)
+				printf("^^^^^^^^^^^^^^^^^^  %s   \n",temp->head->next->next);
 			userinfo * usertemp = temp->head;
 			while(usertemp!=NULL){
-				printf("the current user on this session:  |%s| \n", usertemp->userName);
+				//printf("the current user on this session:  |%s| \n", usertemp->userName);
 				usertemp = usertemp->next;
 			
 			}
@@ -487,11 +492,12 @@ bool client_leave(const char* sessionName,  const char *userName){
 						temp->head = NULL;
 						temp->head = next;
 						free(head);
-						//return true;
+						printf("&&&&&& & &   %s %s \n",temp->head->userName, temp->head->next);
 					}
 					
 					else{				//case for deleting the node in middle or the end
 						prev->next = head->next;
+						printf("~~~~~~~~~~~~~~check if it's a null %s  \n",prev->next);
 						free(head);
 						
 					}
@@ -640,27 +646,7 @@ bool client_exit(const char *userName){
 			Shead = NULL;
 		else
 			Sprev->next = NULL;
-		
-		/*if(Shead!=NULL){	
-			temp =Shead;
-			Chead = temp->head;
-		}
-		
-		printf("breakpoint 5\n");
-		
-		while(temp!=NULL){
-			printf("FINAL session check   %s \n",temp->sessionName);
-			while(Chead!=NULL){
-				printf("FINAL client check in the session  %s  %s \n",Chead->userName,temp->sessionName);
-				Chead=Chead->next;
-			}
-			//count++;
-			temp=temp->next;
-		
-		
-		}*/
-		//printf("breakpoint 5\n");
-		//this is for testing -----------------------------------------------------------------
+	
 		if(has)
 			return true;
 			
