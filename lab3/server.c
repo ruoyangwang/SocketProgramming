@@ -42,7 +42,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8001 );
+    server.sin_port = htons( 8000 );
 
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -328,6 +328,7 @@ bool Read_login(const char*username, const char *passwd){
 		strcpy(newuser->userName, username);
 		newuser->sock = -1;
 		head->next = newuser;
+		newuser->next = NULL;
 	}
 				//append newuser to the end of linkelist
 	//------------------------------------------------------------
@@ -492,7 +493,7 @@ bool client_leave(const char* sessionName,  const char *userName){
 						temp->head = NULL;
 						temp->head = next;
 						free(head);
-						printf("&&&&&& & &   %s %s \n",temp->head->userName, temp->head->next);
+						//printf("&&&&&& & &   %s %s \n",temp->head->userName, temp->head->next);
 					}
 					
 					else{				//case for deleting the node in middle or the end
@@ -540,7 +541,7 @@ bool client_exit(const char *userName){
 			next = head->next;
 			if(strcmp(head->userName, userName)==0){
 					if(count ==0){
-						printf("Find the quitting client, it's at the head of CurrClient   %s \n",head->userName);
+						//printf("Find the quitting client, it's at the head of CurrClient   %s \n",head->userName);
 						//Chead->head = NULL;
 						CurrClient = next;
 						
@@ -583,7 +584,7 @@ bool client_exit(const char *userName){
 				next = head->next;
 				if(strcmp(head->userName, userName)==0){
 					if(count ==0){
-						printf("Find this exiting client in the head of this session   %s \n",temp->sessionName);
+						//printf("Find this exiting client in the head of this session   %s \n",temp->sessionName);
 						temp->head = NULL;
 						temp->head = next;
 						printf("---------------------------------\n");

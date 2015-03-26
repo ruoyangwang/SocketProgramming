@@ -322,24 +322,24 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
         
         if (strlen(curr_sess) != 0)
         {
-        struct lab3message packettoserver;
-		packettoserver.type = MESSAGE;
-		char new_buffer[2000];
-		strcpy (new_buffer, client_id);
-		strcat (new_buffer, ":");
-		strcat (new_buffer, curr_sess);
-		strcpy(packettoserver.source, new_buffer);
+		    struct lab3message packettoserver;
+			packettoserver.type = MESSAGE;
+			char new_buffer[2000];
+			strcpy (new_buffer, client_id);
+			strcat (new_buffer, ":");
+			strcat (new_buffer, curr_sess);
+			strcpy(packettoserver.source, new_buffer);
 		
 		
-		strcpy(packettoserver.data , msg_without_command);
-		packettoserver.size = sizeof(packettoserver.data);
-		 //printf("%s\n", packettoserver.data);
+			strcpy(packettoserver.data , msg_without_command);
+			packettoserver.size = sizeof(packettoserver.data);
+			 //printf("%s\n", packettoserver.data);
 		
-		//Send some data
-		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
-		{
-		    puts("Send failed");
-		}
+			//Send some data
+			if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+			{
+				puts("Send failed");
+			}
 
 
         }
@@ -461,7 +461,7 @@ void *listener(){
 			
 			if(packetfromserver.type==MESSAGE)		
 			{
-			printf("%s\n",packetfromserver.data );
+			printf("\nMessage from others:  %s\n",packetfromserver.data );
 			
 			}	
 			
