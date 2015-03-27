@@ -166,7 +166,7 @@ void *connection_handler(void *socket_desc)
 					while(temp!=NULL){
 			
 						if(temp->head !=NULL){
-							printf("HEAD NOT NULL\n",temp->head->userName);
+							//printf("HEAD NOT NULL\n",temp->head->userName);
 							if(count ==0){
 								Shead = temp;
 								count=1;
@@ -218,7 +218,7 @@ void *connection_handler(void *socket_desc)
 					printf("message successfully broadcasted \n");				
 				}
 				else
-					printf("cannot find the session or user not in the session \n");		
+					printf("cannot find the session or no one else in that session \n");		
 				break;
 				
 			
@@ -258,12 +258,12 @@ bool send_message(const char*message,  char *user){
 	int i = 0;
 	bool broadcast = false;
 	strcpy(info, user);
-	printf("print first info: |%s|  , and the message? : |%s| \n",user, message);
+	//printf("print first info: |%s|  , and the message? : |%s| \n",user, message);
 	session * temp =Shead;
 	
 	token = strtok(info, ":");
 	strcpy(uName, token);
-   	printf("print userName: %s , leftover string: %s\n", token,info);
+   //	printf("print userName: %s , leftover string: %s\n", token,info);
 	   /* walk through other tokens */
 	for(i=0;i<1;i++) 
 	{
@@ -271,18 +271,26 @@ bool send_message(const char*message,  char *user){
 		  strcpy(sName,token);
 	}
 	
-	printf("session name :  %s  \n",sName);
+	//printf("session name :  %s  \n",sName);
 	
 	while(temp!=NULL){
 		if(strcmp(temp->sessionName,sName)==0){
 			userinfo *head = temp->head;
 			while(head!= NULL){
 				if(strcmp(head->userName, uName)){
-					printf("found the other client, now broadcast  |%s|  \n", head->userName);
+					//printf("found the other client, now broadcast  |%s|  \n", head->userName);
 					struct lab3message packetToClient;
+					char tmp[200];
+					memset(packetToClient.data, 0, sizeof packetToClient.data);
+					memset(packetToClient.source, 0, sizeof packetToClient.data);
+					memset(tmp, 0, sizeof tmp);
 					packetToClient.type = MESSAGE;
-					strcpy(packetToClient.data,message);
-					printf("what's the client's socket? %d\n",head-> sock);
+					strcat(tmp,"[");
+					strcat(tmp,temp->sessionName);
+					strcat(tmp,"]");
+					
+					strcpy(packetToClient.data,message);					
+					strcpy(packetToClient.source, tmp);
 					write(head-> sock , &packetToClient , sizeof(packetToClient));
 					broadcast = true;
 				}
@@ -311,7 +319,7 @@ bool Read_login(const char*username, const char *passwd){
     
     /*first insert this client name into client node ------------*/
     userinfo * head = CurrClient;
-    printf("first after assignment of head\n");
+   // printf("first after assignment of head\n");
     if(head==NULL){
 		userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
 		strcpy(newuser->userName, username);
@@ -321,13 +329,21 @@ bool Read_login(const char*username, const char *passwd){
 		printf("LOGIN: first client!  %s  \n",CurrClient->userName);
 	}
    	else{
-		while(head->next!=NULL)
+   		userinfo *prev = NULL;
+   		
+		while(head!=NULL){
+			prev = head;
+			//printf("check linkedlist inside login %s \n",head->userName);
+			if(strcmp(head->userName,username)==0)
+				return false;
+			
 			head = head->next;
-		printf("check linkedlist inside login\n");
+		}
+		//printf("check linkedlist inside login\n");
 		userinfo *newuser = (userinfo *)malloc(sizeof(userinfo));
 		strcpy(newuser->userName, username);
 		newuser->sock = -1;
-		head->next = newuser;
+		prev->next = newuser;
 		newuser->next = NULL;
 	}
 				//append newuser to the end of linkelist
@@ -341,7 +357,7 @@ bool Read_login(const char*username, const char *passwd){
 		   char password[50];
 		   char passwd[50];
 		   int i = 0;
-		   printf("current line for read: %s \n", line);
+		   //printf("current line for read: %s \n", line);
 		   
 		   token = strtok(line, ":");
 		   strcpy(uName, token);
@@ -355,11 +371,11 @@ bool Read_login(const char*username, const char *passwd){
 			for(i = 0; i<strlen(password);i++){
 				passwd[i]=password[i];
 			}	
-			printf("the username and password after tok? :  |%s|    |%s|\n",uName, passwd);
+			//printf("the username and password after tok? :  |%s|    |%s|\n",uName, passwd);
 		   if(strcmp(username,uName)==0){
-		   		printf("find the same username \n");
+		   		//printf("find the same username \n");
 		   		if(strcmp(passwd,password)==0){
-		   			printf("find the same password, return true \n");
+		   		//	printf("find the same password, return true \n");
 		   			return true;
 		   		
 		   		}
@@ -379,9 +395,9 @@ bool check_session_exist(const char* sessionName,  const char *userName, int soc
 	session * temp =Shead;
 	bool test= false;
 	while(temp!=NULL){
-		printf("current session name on iteration   |%s| \n", temp->sessionName);
+		//printf("current session name on iteration   |%s| \n", temp->sessionName);
 		if(strcmp(temp->sessionName,sessionName)==0){
-			printf("found the session\n");
+			//printf("found the session\n");
 			
 			userinfo *head = temp->head;
 			if(head ==NULL){
@@ -404,7 +420,7 @@ bool check_session_exist(const char* sessionName,  const char *userName, int soc
 				test = true;
 			}
 			head->next = newuser;
-			printf("****************  %s   %s  \n",temp->head->userName, temp->head->next);
+			//printf("****************  %s   %s  \n",temp->head->userName, temp->head->next);
 			if(test)
 				printf("^^^^^^^^^^^^^^^^^^  %s   \n",temp->head->next->next);
 			userinfo * usertemp = temp->head;
@@ -427,7 +443,7 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 	printf("now create new session, what's the userName:  |%s| , what's session name: |%s| \n",userName, sessionName);
 	session * temp =Shead;
 	if(temp == NULL){
-		printf("head is NULL now: \n");
+		//printf("head is NULL now: \n");
 		session *newsession = (session *)malloc(sizeof(session));
 		strcpy(newsession->sessionName,sessionName);
 		temp = newsession;
@@ -436,7 +452,7 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 		strcpy(newuser->userName,userName);
 		newuser->sock = sock;
 		newsession->head = newuser;
-		printf("session right now? |%s|  |%s|\n",temp->sessionName,Shead->sessionName);
+		//printf("session right now? |%s|  |%s|\n",temp->sessionName,Shead->sessionName);
 		return true;
 	}
 	
@@ -448,7 +464,7 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 		temp = temp->next;
 	}
 	
-	printf("head is not NULL, create another session: \n");
+	//printf("head is not NULL, create another session: \n");
 	
 	
 	session *newsession = (session *)malloc(sizeof(session));
@@ -462,7 +478,7 @@ bool create_new_session(const char* sessionName,  const char *userName, int sock
 	
 	session * Atemp =Shead;
 	while(Atemp!=NULL){
-		printf("session right now? |%s|\n",Atemp->sessionName);
+		//printf("session right now? |%s|\n",Atemp->sessionName);
 		Atemp = Atemp->next;
 	}
 	return true;
@@ -475,7 +491,7 @@ bool client_leave(const char* sessionName,  const char *userName){
 	printf("LEAVESESSION   %s   %s \n",sessionName, userName);
 	session * temp =Shead;
 	if(temp == NULL){
-		printf("head is NULL now: \n");
+		//printf("head is NULL now: \n");
 		return false;
 	}
 	while(temp!=NULL){
@@ -487,9 +503,9 @@ bool client_leave(const char* sessionName,  const char *userName){
 			int count = 0;
 			while(head!= NULL){
 				if(strcmp(head->userName, userName)==0){
-					printf("found the client, now delete this node from linkedlist \n");
+					//printf("found the client, now delete this node from linkedlist \n");
 					if(count ==0){		//indicate the client to delete is the head
-						printf("I am on the first node to be deleted \n");
+						//printf("I am on the first node to be deleted \n");
 						temp->head = NULL;
 						temp->head = next;
 						free(head);
@@ -498,7 +514,7 @@ bool client_leave(const char* sessionName,  const char *userName){
 					
 					else{				//case for deleting the node in middle or the end
 						prev->next = head->next;
-						printf("~~~~~~~~~~~~~~check if it's a null %s  \n",prev->next);
+						//printf("~~~~~~~~~~~~~~check if it's a null %s  \n",prev->next);
 						free(head);
 						
 					}
@@ -568,13 +584,13 @@ bool client_exit(const char *userName){
 		//printf("breakpoint 2\n");
 		
 		if(temp == NULL){
-			printf("head NULL, so client not in any session, can exit directly \n");
+			//printf("head NULL, so client not in any session, can exit directly \n");
 			return false;
 		}
 		
 		count = 0;
 		while(temp!=NULL){
-			printf("---------  %s \n",temp->sessionName);
+			//printf("---------  %s \n",temp->sessionName);
 			
 			head = temp->head;
 			prev = NULL;
@@ -587,7 +603,7 @@ bool client_exit(const char *userName){
 						//printf("Find this exiting client in the head of this session   %s \n",temp->sessionName);
 						temp->head = NULL;
 						temp->head = next;
-						printf("---------------------------------\n");
+						//printf("---------------------------------\n");
 						free(head);
 					}
 					else{				//case for deleting the node in middle or the end
@@ -620,7 +636,7 @@ bool client_exit(const char *userName){
 		while(temp!=NULL){
 			
 			if(temp->head !=NULL){
-				printf("HEAD NOT NULL\n",temp->head->userName);
+				//printf("HEAD NOT NULL\n",temp->head->userName);
 				if(count ==0){
 					Shead = temp;
 					count=1;
@@ -633,13 +649,6 @@ bool client_exit(const char *userName){
 				
 			}
 			
-			
-			/*printf("FINAL session check   %s \n",temp->sessionName);
-			while(Chead!=NULL){
-				printf("FINAL client check in the session  %s  %s \n",Chead->userName,temp->sessionName);
-				Chead=Chead->next;
-			}
-			//count++;*/
 			temp=temp->next;
 		}
 		//printf("breakpoint 4\n");
@@ -686,7 +695,7 @@ void get_list(int sock){
 		Chead = Chead->next;
 	}
 	//now cat client names
-	printf("print the list before send  %s \n",packetToClient.data);
+	//printf("print the list before send  %s \n",packetToClient.data);
 	
 	
 	write(sock , &packetToClient , sizeof(packetToClient));
