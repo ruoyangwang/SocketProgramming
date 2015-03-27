@@ -11,8 +11,8 @@
 
 
 //packet type protocal
-#define EXIT 0
 
+#define EXIT 0
 #define LOGIN 10
 #define LO_ACK 11
 #define LO_NAK 12

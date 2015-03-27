@@ -602,6 +602,7 @@ void *listener(){
 
 			if(packetfromserver.type==MESSAGE)		
 			{
+			printf("%s ",packetfromserver.source);
 			printf("%s\n",packetfromserver.data );
 			
 			}	
