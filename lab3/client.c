@@ -15,7 +15,7 @@ char client_pw[1000] ;
 char server_ip[1000] ;
 char server_port[1000] ;
 int sock;
-char curr_sess[2000];
+char curr_sess[99][2000];
 
 
 
@@ -41,7 +41,7 @@ int main(int argc , char *argv[])
 	memset(message,0,sizeof message);
 	memset(arg1,0,sizeof arg1);
 	int i = 0;
-        printf("Enter command: ");
+        
    	fgets(message, sizeof(message),stdin);
 
 	for(i = 0;i <strlen(message)-1;i++){
@@ -194,81 +194,143 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 		{
 		    puts("Send failed");
 		}
-
-
-		strcpy(curr_sess,"");
+		int i;
+		for (i = 0; i<(sizeof curr_sess/ sizeof curr_sess[0]);i++)
+		{
+			if (strlen(curr_sess[i]) != 0)
+			{
+				strcpy(curr_sess[i], "");
+				
+			}
+		}
+		//strcpy(curr_sess,"");
         logged_in = 0;
 
 
 	}
 	else if (!strcmp(command,"/joinsession"))
 	{
-        
-        if (strlen(curr_sess) == 0)
-        {
-	    	struct lab3message packettoserver;
-		packettoserver.type = JOIN;
-		strcpy(packettoserver.source, client_id);
-		strcpy(packettoserver.data , arg1);
-		packettoserver.size = sizeof(packettoserver.data);
+		int i = 0;        	
+		
+		bool already_in_sess = false;
+		
 
 
-        //Send some data
-        if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
-        {
-            puts("Send failed");
-        }
-        }
-        else
-        {
-            printf("PLESE LEAVE THE CURRENT SESSION FIRST\n");
-        }
+		for (i = 0; i<(sizeof curr_sess/ sizeof curr_sess[0]);i++)
+		{
+			if (strcmp(curr_sess[i], arg1) == 0)
+			{
+				already_in_sess = true;
+				break;
+			}
+		}
+
+
+
+
+		if (!already_in_sess)
+		{
+		    	struct lab3message packettoserver;
+			packettoserver.type = JOIN;
+			strcpy(packettoserver.source, client_id);
+			strcpy(packettoserver.data , arg1);
+			packettoserver.size = sizeof(packettoserver.data);
+
+
+			//Send some data
+			if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+			{
+			    puts("Send failed");
+			}
+		}
+		else
+		{
+		    printf("PLESE LEAVE THE CURRENT SESSION FIRST\n");
+		}
 
 
 	}
 	else if (!strcmp(command,"/leavesession"))
 	{
-        if (strlen(curr_sess) != 0)
-        {
-        struct lab3message packettoserver;
-		packettoserver.type = LEAVE_SESS;
-        
-            
-            //printf("%s\n", new_buffer);
-		strcpy(packettoserver.source, client_id);
-		strcpy(packettoserver.data , curr_sess);
-		packettoserver.size = sizeof(packettoserver.data);
 
-
-		//Send some data
-		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		int i = 0;        	
+		
+		bool already_in_sess = false;
+		for (i = 0; i<(sizeof curr_sess/ sizeof curr_sess[0]);i++)
 		{
-		    puts("Send failed");
+			if (strcmp(curr_sess[i], arg1) == 0)
+			{
+				already_in_sess = true;
+				strcpy(curr_sess[i],"");
+				break;
+			}
 		}
-		strcpy(curr_sess,"");
-        }
-        else
-        {
-            printf("PLESE JOIN A SESSION FIRST\n");
-        }
+
+		
+		
+
+		if (already_in_sess)
+		{
+		struct lab3message packettoserver;
+			packettoserver.type = LEAVE_SESS;
+		
+		    
+		    //printf("%s\n", new_buffer);
+			strcpy(packettoserver.source, client_id);
+			strcpy(packettoserver.data , arg1);
+			packettoserver.size = sizeof(packettoserver.data);
+
+
+			//Send some data
+			if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+			{
+			    puts("Send failed");
+			}
+			
+		}
+		else
+		{
+		    printf("PLESE JOIN A SESSION FIRST\n");
+		}
 
 
 	}
 	else if (!strcmp(command,"/createsession"))
 	{
-	    	struct lab3message packettoserver;
-		packettoserver.type = NEW_SESS;
-		strcpy(packettoserver.source, client_id);
-		strcpy(packettoserver.data , arg1);
-		packettoserver.size = sizeof(packettoserver.data);
-
-
-		//Send some data
-		if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+		int i = 0;        	
+		
+		bool already_in_sess = false;
+		
+		for (i = 0; i<(sizeof curr_sess/ sizeof curr_sess[0]);i++)
 		{
-		    puts("Send failed");
+			if (strcmp(curr_sess[i], arg1) == 0)
+			{
+				already_in_sess = true;
+				break;
+			}
 		}
 
+		if (!already_in_sess)
+		{
+
+
+
+		    	struct lab3message packettoserver;
+			packettoserver.type = NEW_SESS;
+			strcpy(packettoserver.source, client_id);
+			strcpy(packettoserver.data , arg1);
+			packettoserver.size = sizeof(packettoserver.data);
+
+
+			//Send some data
+			if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
+			{
+			    puts("Send failed");
+			}
+		}else
+		{
+			printf("PLESE LEAVE THE CURRENT SESSION FIRST\n");
+		}
 	
 
 
@@ -317,39 +379,87 @@ void command_handler(char command[2000], char arg1[2000], char arg2[2000], char 
 
 
 	}
-	else
+	else if (command[0]=='@')
 	{
+		int i = 0;        	
+		
+		bool already_in_sess = false;
+		for (i = 0; i<(sizeof curr_sess/ sizeof curr_sess[0]);i++)
+		{
+			if (strlen(curr_sess[i]) != 0)
+			{
+				already_in_sess = true;
+				break;
+			}
+		}
+
         
-        if (strlen(curr_sess) != 0)
-        {
-		    struct lab3message packettoserver;
+		if (already_in_sess)
+		{
+			char sess_name[2000];
+			char * temp =command;
+			strcpy(sess_name, temp+1);
+			
+
+			struct lab3message packettoserver;
 			packettoserver.type = MESSAGE;
+
+
 			char new_buffer[2000];
 			strcpy (new_buffer, client_id);
 			strcat (new_buffer, ":");
-			strcat (new_buffer, curr_sess);
+			strcat (new_buffer, sess_name);
+			
 			strcpy(packettoserver.source, new_buffer);
-		
-		
-			strcpy(packettoserver.data , msg_without_command);
+
+
+			char msg[2000];
+			char* token = strtok(msg_without_command, " ");
+				
+				int counter = 0;
+				while (token != NULL){
+				    //printf( "%s \n",token);
+				    if (counter ==1)
+				        strcpy(msg,token);
+				    token = strtok (NULL, " ");
+				    counter++;
+				}
+				counter = 0;
+
+
+
+			strcpy(packettoserver.data , msg);
+
+
+
+
+
+
+
+
+			//printf("packettoserver.source---------%s\n", new_buffer);
+			//printf("packettoserver.data---------%s\n", msg);
 			packettoserver.size = sizeof(packettoserver.data);
 			 //printf("%s\n", packettoserver.data);
 		
 			//Send some data
 			if( send(sock , &packettoserver , sizeof(packettoserver) , 0) < 0)
 			{
-				puts("Send failed");
+			    puts("Send failed");
 			}
 
 
-        }
-        else
-        {
-            printf("PLESE JOIN A SESSION FIRST\n");
-        }
+		}
+		else
+		{
+		    printf("PLESE JOIN A SESSION FIRST\n");
+		}
 
 
 
+	}else
+	{
+		printf("Unknown command\n");
 	}
 	
 
@@ -387,7 +497,18 @@ void *listener(){
 
 			if(packetfromserver.type==JN_ACK){
 			printf("JOIN SESSION SECCESS\n");
-			strcpy(curr_sess,packetfromserver.data);
+			int i;
+			for (i = 0; i<(sizeof curr_sess/ sizeof curr_sess[0]);i++)
+				{
+					if (strlen(curr_sess[i]) == 0)
+					{
+						strcpy(curr_sess[i],packetfromserver.data);
+						break;
+					}
+				}
+
+
+			
 			}
 			 
 			if(packetfromserver.type==JN_NAK)		
@@ -450,18 +571,38 @@ void *listener(){
 				
 				}
 
+
+
 			if(packetfromserver.type==NS_ACK)		
 			{
-                puts("CREATE SESSION SECCESS");
-                printf ("Enter Command:");
-                strcpy(curr_sess,packetfromserver.data);
-                
+                		puts("CREATE SESSION SECCESS");
+             
+		       		int i;
+				for (i = 0; i<(sizeof curr_sess/ sizeof curr_sess[0]);i++)
+					{
+						
+						if (strlen(curr_sess[i]) == 0)
+						{
+							strcpy(curr_sess[i],packetfromserver.data);
+							
+							break;
+						}
+						
+					}
+
+				
+			
+			
+               
 			}	
-			
-			
+
+
+
+
+
 			if(packetfromserver.type==MESSAGE)		
 			{
-			printf("\nMessage from others:  %s\n",packetfromserver.data );
+			printf("%s\n",packetfromserver.data );
 			
 			}	
 			
