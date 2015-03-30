@@ -30,8 +30,17 @@ int main(int argc , char *argv[])
    
      char message[1000], message_tmp[1000], msg_without_command[1000] , server_reply[2000], command[2000], ip_addr[100], buffer[1000];
     char arg1[1000], arg2[1000], arg3[1000], arg4[1000];
-
-
+	memset(message, 0, sizeof message);
+	memset(message_tmp, 0, sizeof message_tmp);
+	memset(msg_without_command, 0, sizeof msg_without_command);
+	memset(server_reply, 0, sizeof server_reply);
+	memset(command, 0, sizeof command);
+	memset(ip_addr, 0, sizeof ip_addr);
+	memset(buffer, 0, sizeof buffer);
+	memset(arg1, 0, sizeof arg1);
+	memset(arg2, 0, sizeof arg2);
+	memset(arg3, 0, sizeof arg3);
+	memset(arg4, 0, sizeof arg4);
 
 
 
@@ -112,6 +121,7 @@ int main(int argc , char *argv[])
 	    	}
 
 		struct lab3message packettoserver;
+
 		packettoserver.type = LOGIN;
 		strcpy(packettoserver.source, client_id);
 		strcpy(packettoserver.data , client_pw);
@@ -178,7 +188,7 @@ int main(int argc , char *argv[])
 
 
 
-void command_handler(char command[2000], char arg1[2000], char arg2[2000], char arg3[2000], char arg4[2000], char message[2000], char msg_without_command[2000]){
+void command_handler(char* command, char* arg1, char* arg2, char* arg3, char* arg4, char* message, char* msg_without_command){
 
 	
 	if (!strcmp(command,"/logout"))

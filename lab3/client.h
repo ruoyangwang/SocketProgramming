@@ -61,7 +61,6 @@ typedef struct session session;
 
 
 
-
-void command_handler(char command[2000], char arg1[2000], char arg2[2000], char arg3[2000], char arg4[2000], char message[2000], char msg_without_command[2000]);
+void command_handler(char* command, char* arg1, char* arg2, char* arg3, char* arg4, char* message, char* msg_without_command);
 void *listener();
 #endif
